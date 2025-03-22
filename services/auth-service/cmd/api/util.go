@@ -1,5 +1,11 @@
 package main
 
+import "time"
+
+const (
+	ExpiresAtVerificationToken = time.Hour * 24 * 5
+)
+
 type paginatedResponse struct {
 	Total  int   `json:"total"`
 	Result []any `json:"result"`

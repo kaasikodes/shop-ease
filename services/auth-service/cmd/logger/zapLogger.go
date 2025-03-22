@@ -29,3 +29,6 @@ func (l *ZapLogger) Warn(v ...any) {
 func (l *ZapLogger) Error(v ...any) {
 	l.logger.Errorw("ERROR", "msg", v)
 }
+func (l *ZapLogger) Fatal(v ...any) {
+	l.logger.Fatal("ERROR", "msg", v)
+}

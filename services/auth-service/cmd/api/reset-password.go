@@ -4,7 +4,7 @@ import "net/http"
 
 func (app *application) resetPasswordHandler(w http.ResponseWriter, r *http.Request) {
 	data := map[string]string{
-		"status":      "ok____",
+		"status":      "ok____reset",
 		"environment": app.config.env,
 		"version":     version,
 	}

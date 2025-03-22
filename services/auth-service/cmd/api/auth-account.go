@@ -4,7 +4,7 @@ import "net/http"
 
 func (app *application) retriveAuthAccountHandler(w http.ResponseWriter, r *http.Request) {
 	data := map[string]string{
-		"status":      "ok____",
+		"status":      "ok Auth",
 		"environment": app.config.env,
 		"version":     version,
 	}

@@ -4,7 +4,7 @@ import "net/http"
 
 func (app *application) loginHandler(w http.ResponseWriter, r *http.Request) {
 	data := map[string]string{
-		"status":      "ok____",
+		"status":      "ok____login",
 		"environment": app.config.env,
 		"version":     version,
 	}

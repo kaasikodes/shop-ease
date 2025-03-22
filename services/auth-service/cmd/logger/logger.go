@@ -5,4 +5,5 @@ type Logger interface {
 	Info(v ...any)
 	Warn(v ...any)
 	Error(v ...any)
+	Fatal(v ...any)
 }

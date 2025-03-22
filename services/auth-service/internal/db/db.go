@@ -9,7 +9,7 @@ import (
 )
 
 func New(addr string, maxOpenConns int, maxIdleConns int, maxIdleTime string) (*sql.DB, error) {
-	db, err :=sql.Open("mysql", addr)
+	db, err := sql.Open("mysql", addr)
 	if err != nil {
 		return nil, err
 	}
@@ -21,18 +21,15 @@ func New(addr string, maxOpenConns int, maxIdleConns int, maxIdleTime string) (*
 		return nil, err
 	}
 	db.SetConnMaxIdleTime(duration)
-	ctx, cancel:= context.WithTimeout(context.Background(), time.Second * 5)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 
 	defer cancel()
 
-
 	if err := db.PingContext(ctx); err != nil {
 		return nil, err
-		
+
 	}
 
 	return db, nil
-
-
 
 }

@@ -7,6 +7,7 @@ import (
 
 	"github.com/go-chi/chi"
 	"github.com/kaasikodes/shop-ease/cmd/logger"
+	"github.com/kaasikodes/shop-ease/internal/store"
 )
 
 type config struct {
@@ -18,7 +19,6 @@ type config struct {
 	frontendUrl string
 	auth        authConfig
 	redis       redisConfig
-	
 }
 
 type rateLimiterConfig struct {
@@ -36,9 +36,10 @@ type dbConfig struct {
 	maxIdleTime  string
 }
 type application struct {
-	config config
+	config      config
 	rateLimiter rateLimiterConfig
-	logger logger.Logger
+	logger      logger.Logger
+	store       store.Storage
 }
 
 func (app *application) mount() http.Handler {
@@ -54,12 +55,14 @@ func (app *application) mount() http.Handler {
 			r.Post("/forgot-password", app.forgotPasswordHandler)
 			r.Post("/reset-password", app.resetPasswordHandler)
 			// TODO: Add middleware here to check wether user is authenticated
-			r.Get("/me", app.retriveAuthAccountHandler)
+			r.Group(func(r chi.Router) {
+				r.Get("/me", app.retriveAuthAccountHandler)
+			})
 		})
 
 		// They ought to be grpc endpoints that other services can call like
 		// isUserVerified : vendor
-		// listOfUsers with pagination params and all : 
+		// listOfUsers with pagination params and all :
 		// getUserById : vendor
 		// doesUserHaveRoleAsActive
 		// activateOrDeactivateUserRole: payment, admin
@@ -67,37 +70,31 @@ func (app *application) mount() http.Handler {
 
 		// Like wise
 		// The login for vendor will have to check if the user has an active subscription or not, if not don't allow login
-		// 
-
-
+		//
 
 	})
 
-	return r;
+	return r
 
 }
-func (app *application) run(mux http.Handler)  error {
+func (app *application) run(mux http.Handler) error {
 
 	server := &http.Server{
-		Addr: app.config.addr,
-		Handler: mux,
+		Addr:         app.config.addr,
+		Handler:      mux,
 		WriteTimeout: time.Second * 30,
-		ReadTimeout: time.Second * 10,
-		IdleTimeout: time.Minute,
+		ReadTimeout:  time.Second * 10,
+		IdleTimeout:  time.Minute,
 	}
-	
+
 	app.logger.Info("App running starting to run on .....", app.config.addr)
 	err := server.ListenAndServe()
 	log.Println("App running stopping to run on .....", app.config.addr)
-	
+
 	if err != nil {
 		return err
 	}
-	
 
-	
 	return nil
-
-
 
 }

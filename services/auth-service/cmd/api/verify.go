@@ -4,7 +4,7 @@ import "net/http"
 
 func (app *application) verifyHandler(w http.ResponseWriter, r *http.Request) {
 	data := map[string]string{
-		"status":      "ok____",
+		"status":      "ok__ verify",
 		"environment": app.config.env,
 		"version":     version,
 	}

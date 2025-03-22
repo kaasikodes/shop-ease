@@ -44,3 +44,8 @@ func (l *DefaultLogger) Warn(v ...any) {
 func (l *DefaultLogger) Error(v ...any) {
 	l.logger.Println("ERROR:", v)
 }
+
+// Fatal error
+func (l *DefaultLogger) Fatal(v ...any) {
+	l.logger.Fatal("FATAL ERROR:", v)
+}
