@@ -4,8 +4,13 @@ import (
 	"context"
 
 	"github.com/go-playground/validator/v10"
-	"github.com/kaasikodes/shop-ease/notification/store"
+	"github.com/kaasikodes/shop-ease/services/notification-service/store"
 )
+
+// go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
+// go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
+
+// protoc --go_out=. --go-grpc_out=. proto/notification.proto
 
 var Validate *validator.Validate
 

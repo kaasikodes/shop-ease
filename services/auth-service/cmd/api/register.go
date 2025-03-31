@@ -3,11 +3,12 @@ package main
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
 
-	"github.com/kaasikodes/shop-ease/internal/store"
-
 	"github.com/google/uuid"
+	"github.com/kaasikodes/shop-ease/services/auth-service/internal/store"
+	"github.com/kaasikodes/shop-ease/shared/proto/notification"
 )
 
 type RegisterUserPayload struct {
@@ -49,7 +50,7 @@ func (app *application) registerHandler(w http.ResponseWriter, r *http.Request) 
 	ctx := r.Context()
 	switch payload.RoleId {
 	case store.CustomerID:
-		user, err := app.registerCustomer(ctx, payload)
+		user, verificationToken, err := app.registerCustomer(ctx, payload)
 		if err != nil {
 			if err == store.ErrDuplicateEmail {
 				app.badRequestResponse(w, r, err)
@@ -58,6 +59,22 @@ func (app *application) registerHandler(w http.ResponseWriter, r *http.Request) 
 			}
 			app.internalServerError(w, r, err)
 			return
+		}
+		if verificationToken != nil {
+			app.logger.Info("Interaction with notification service begins  ....", *verificationToken)
+			n, err := app.notificationService.Send(ctx, &notification.NotificationRequest{
+				Email:   user.Email,
+				Title:   "Customer Verification",
+				Content: fmt.Sprintf("This is your verification token %s", *verificationToken),
+			},
+			)
+			if err != nil {
+				app.logger.Warn("Error interacting with the notification service", err)
+
+			} else {
+
+				app.logger.Info("Success interacting with the notification service", n)
+			}
 		}
 		app.jsonResponse(w, http.StatusCreated, "Customer account created successfully, please check email for a verification link!", user)
 		return
@@ -72,24 +89,24 @@ func (app *application) registerHandler(w http.ResponseWriter, r *http.Request) 
 	}
 
 }
-func (app *application) registerCustomer(ctx context.Context, payload RegisterUserPayload) (*store.User, error) {
+func (app *application) registerCustomer(ctx context.Context, payload RegisterUserPayload) (*store.User, *string, error) {
 	// create user acc
 	user := &store.User{
 		Name:  payload.Name,
 		Email: payload.Email,
 	}
 	if err := user.Password.Set(payload.Password); err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	plainToken := uuid.New().String() //TODO: hash and save token, not just the plain token
 	err := app.store.Users().CreateWithVerificationToken(ctx, user, plainToken, ExpiresAtVerificationToken)
 
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	// communicate with the notification service via grpc to send a verification email
-	return user, nil
+	return user, &plainToken, nil
 
 }
 func registerVendor() {

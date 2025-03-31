@@ -1,10 +1,12 @@
 package main
 
 import (
-	"github.com/kaasikodes/shop-ease/cmd/logger"
-	"github.com/kaasikodes/shop-ease/internal/db"
-	"github.com/kaasikodes/shop-ease/internal/env"
-	store "github.com/kaasikodes/shop-ease/internal/store/sql-store"
+	grpc_client "github.com/kaasikodes/shop-ease/services/auth-service/cmd/grpc"
+	"github.com/kaasikodes/shop-ease/services/auth-service/cmd/logger"
+	"github.com/kaasikodes/shop-ease/services/auth-service/internal/db"
+	"github.com/kaasikodes/shop-ease/services/auth-service/internal/env"
+	store "github.com/kaasikodes/shop-ease/services/auth-service/internal/store/sql-store"
+	"github.com/kaasikodes/shop-ease/shared/proto/notification"
 )
 
 const version = "0.0.0"
@@ -28,16 +30,21 @@ func main() {
 		auth:  authConfig{},
 	}
 	db, err := db.New(cfg.db.addr, cfg.db.maxOpenConns, cfg.db.maxOpenConns, cfg.db.maxIdleTime)
-	defer db.Close()
 	if err != nil {
 		logger.Fatal(err)
 	}
+	defer db.Close()
 	logger.Info("database connection estatblished")
+	// grpcConn
+	conn := grpc_client.NewGRPCClient(":5050")
+	defer conn.Close()
+	n := notification.NewNotificationServiceClient(conn)
 	var app = &application{
-		config:      cfg,
-		rateLimiter: rateLimiterConfig{},
-		logger:      logger,
-		store:       store.NewSQLStorage(db),
+		config:              cfg,
+		rateLimiter:         rateLimiterConfig{},
+		logger:              logger,
+		store:               store.NewSQLStorage(db),
+		notificationService: n,
 	}
 	mux := app.mount()
 

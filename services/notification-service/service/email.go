@@ -3,14 +3,16 @@ package service
 import (
 	"context"
 	"errors"
+	"log"
 
-	"github.com/kaasikodes/shop-ease/notification/store"
+	"github.com/kaasikodes/shop-ease/services/notification-service/store"
 )
 
+type MailConfig struct {
+	Addr string
+}
 type EmailNotificationService struct {
-	mailer struct {
-		apiKey string
-	}
+	config MailConfig
 }
 type EmailNotificationsPayload struct {
 	Notifications []EmailNotificationPayload `json:"notifications" validate:"min=1"`
@@ -21,8 +23,15 @@ type EmailNotificationPayload struct {
 	Content string `json:"content" validate:"required,min=5"`
 }
 
+func NewEmailNotificationService(cfg MailConfig) *EmailNotificationService {
+	log.Println("Address ...", cfg.Addr)
+	return &EmailNotificationService{config: cfg}
+
+}
+
 func (e *EmailNotificationService) SendMultiple(ctx context.Context, notifications []store.Notification) error {
-	if notifications == nil || len(notifications) == 0 {
+	log.Println("Email Notifications sent ...", len(notifications))
+	if notifications == nil {
 		return errors.New("no notifications were passed in")
 	}
 	payload := EmailNotificationsPayload{}
@@ -41,6 +50,8 @@ func (e *EmailNotificationService) SendMultiple(ctx context.Context, notificatio
 	return nil
 }
 func (e *EmailNotificationService) Send(ctx context.Context, notification *store.Notification) error {
+	log.Println("Email Notification sent ...", notification)
+
 	if notification == nil {
 		return errors.New("notification can not be nil")
 	}

@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 
-	"github.com/kaasikodes/shop-ease/notification/store"
+	"github.com/kaasikodes/shop-ease/services/notification-service/store"
 )
 
 type InAppNotificationService struct {
@@ -20,6 +20,10 @@ type InAppNotificationPayload struct {
 	Content string `json:"content" validate:"required,min=5"`
 }
 
+func NewInAppNotificationService(store store.NotificationStore) *InAppNotificationService {
+	return &InAppNotificationService{store}
+
+}
 func (e *InAppNotificationService) Send(ctx context.Context, notification *store.Notification) error {
 	if notification == nil {
 		return errors.New("notification can not be nil")
@@ -41,7 +45,7 @@ func (e *InAppNotificationService) Send(ctx context.Context, notification *store
 
 }
 func (e *InAppNotificationService) SendMultiple(ctx context.Context, notifications []store.Notification) error {
-	if notifications == nil || len(notifications) == 0 {
+	if notifications == nil {
 		return errors.New("no notifications were passed in")
 	}
 	payload := InAppNotificationsPayload{}

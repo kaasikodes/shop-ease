@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/go-sql-driver/mysql"
-	"github.com/kaasikodes/shop-ease/internal/store"
+	"github.com/kaasikodes/shop-ease/services/auth-service/internal/store"
 )
 
 type UserRoleStatus int

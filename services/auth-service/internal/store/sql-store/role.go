@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"errors"
 
-	"github.com/kaasikodes/shop-ease/internal/store"
+	"github.com/kaasikodes/shop-ease/services/auth-service/internal/store"
 )
 
 // Define DefaultRoleName & DefaultRoleID enum

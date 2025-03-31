@@ -1,0 +1,37 @@
+syntax = "proto3";
+
+package notification;
+
+option go_package = "shared/proto/notification;notification";
+
+service NotificationService {
+    rpc Send (NotificationRequest) returns (Notification);
+    rpc SendMultiple (SendMultipleRequest) returns (SendMultipleResponse);
+}
+
+message NotificationRequest {
+    string email = 1;   
+    optional string phone = 2;  // optional
+    string title = 3;    
+    string content = 4;  
+}
+
+message SendMultipleRequest {
+    repeated NotificationRequest notifications = 1;
+}
+
+message SendMultipleResponse {
+    repeated Notification notifications = 1;
+}
+
+message Notification {
+    int32 id = 1;
+    string email = 2;   
+    string phone = 3;  
+    string title = 4;    
+    string content = 5;  
+    bool is_read = 6;  
+    string read_at = 7;  
+    string created_at = 8;  
+    string updated_at = 9;  
+}

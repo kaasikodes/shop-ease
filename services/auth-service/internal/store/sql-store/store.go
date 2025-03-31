@@ -3,7 +3,7 @@ package store
 import (
 	"database/sql"
 
-	"github.com/kaasikodes/shop-ease/internal/store"
+	"github.com/kaasikodes/shop-ease/services/auth-service/internal/store"
 )
 
 type SqlStorage struct {

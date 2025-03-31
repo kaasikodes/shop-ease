@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"time"
 
-	"github.com/kaasikodes/shop-ease/internal/store"
+	"github.com/kaasikodes/shop-ease/services/auth-service/internal/store"
 )
 
 func UnSeed(s store.Storage, db *sql.DB) error {

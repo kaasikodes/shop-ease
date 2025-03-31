@@ -6,8 +6,9 @@ import (
 	"time"
 
 	"github.com/go-chi/chi"
-	"github.com/kaasikodes/shop-ease/cmd/logger"
-	"github.com/kaasikodes/shop-ease/internal/store"
+	"github.com/kaasikodes/shop-ease/services/auth-service/cmd/logger"
+	"github.com/kaasikodes/shop-ease/services/auth-service/internal/store"
+	"github.com/kaasikodes/shop-ease/shared/proto/notification"
 )
 
 type config struct {
@@ -36,10 +37,11 @@ type dbConfig struct {
 	maxIdleTime  string
 }
 type application struct {
-	config      config
-	rateLimiter rateLimiterConfig
-	logger      logger.Logger
-	store       store.Storage
+	config              config
+	rateLimiter         rateLimiterConfig
+	logger              logger.Logger
+	store               store.Storage
+	notificationService notification.NotificationServiceClient
 }
 
 func (app *application) mount() http.Handler {

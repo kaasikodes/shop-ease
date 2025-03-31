@@ -1,11 +1,11 @@
-package main
+package sql_store
 
 import (
 	"context"
 	"database/sql"
 	"fmt"
 
-	"github.com/kaasikodes/shop-ease/notification/store"
+	"github.com/kaasikodes/shop-ease/services/notification-service/store"
 )
 
 type SQLNotificationStore struct {

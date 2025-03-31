@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 
-	"github.com/kaasikodes/shop-ease/notification/store"
+	"github.com/kaasikodes/shop-ease/services/notification-service/store"
 )
 
 type SmsNotificationService struct {
@@ -22,7 +22,7 @@ type SmsNotificationPayload struct {
 }
 
 func (e *SmsNotificationService) SendMultiple(ctx context.Context, notifications []store.Notification) error {
-	if notifications == nil || len(notifications) == 0 {
+	if notifications == nil {
 		return errors.New("no notifications were passed in")
 	}
 	payload := SmsNotificationsPayload{}

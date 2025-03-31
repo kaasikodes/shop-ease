@@ -1,9 +1,9 @@
-package main
+package sql_store
 
 import (
 	"database/sql"
 
-	"github.com/kaasikodes/shop-ease/notification/store"
+	"github.com/kaasikodes/shop-ease/services/notification-service/store"
 )
 
 type PaginationPayload = store.PaginationPayload

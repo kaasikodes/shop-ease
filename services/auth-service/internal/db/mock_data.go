@@ -1,6 +1,6 @@
 package db
 
-import "github.com/kaasikodes/shop-ease/internal/store"
+import "github.com/kaasikodes/shop-ease/services/auth-service/internal/store"
 
 const randomPassword = "Shopease123$"
 
