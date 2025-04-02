@@ -6,15 +6,15 @@ import (
 )
 
 type Notification struct {
-	ID        int       `json:"id"`
-	Email     string    `json:"email"`
-	Phone     string    `json:"phone"`  // can be null
-	IsRead    bool      `json:"isRead"` //defaults to false
-	ReadAt    time.Time `json:"readAt"` //can be null
-	Title     string    `json:"title"`
-	Content   string    `json:"content"`
-	CreatedAt time.Time `json:"createdAt"`
-	UpdatedAt time.Time `json:"updatedAt"`
+	ID        int        `json:"id"`
+	Email     string     `json:"email"`
+	Phone     string     `json:"phone"`  // can be null
+	IsRead    bool       `json:"isRead"` //defaults to false
+	ReadAt    *time.Time `json:"readAt"` //can be null
+	Title     string     `json:"title"`
+	Content   string     `json:"content"`
+	CreatedAt time.Time  `json:"createdAt"`
+	UpdatedAt time.Time  `json:"updatedAt"`
 }
 type NotificationFilter struct {
 	Email  *string `json:"email"`

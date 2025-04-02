@@ -24,7 +24,7 @@ func (app *application) mount() http.Handler {
 	r.Get("/healthz", app.healthzHandler)
 	r.Route("/v1", func(r chi.Router) {
 		r.Route("/notification", func(r chi.Router) {
-			r.Post("/", app.getAllNotifications)
+			r.Get("/", app.getAllNotifications)
 
 		})
 

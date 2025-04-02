@@ -3,6 +3,7 @@ package grpc_server
 import (
 	"context"
 	"fmt"
+	"log"
 	"sync"
 
 	"github.com/kaasikodes/shop-ease/services/notification-service/service"
@@ -46,6 +47,7 @@ func (n *NotificationGrpcHandler) Send(ctx context.Context, payload *notificatio
 		Title:   payload.Title,
 		Content: payload.Content,
 	}
+	log.Println("Send Statrts herere")
 	var errs []error
 	var wg sync.WaitGroup
 	var mu sync.Mutex
@@ -65,6 +67,7 @@ func (n *NotificationGrpcHandler) Send(ctx context.Context, payload *notificatio
 	}
 	wg.Wait()
 
+	log.Println("Send ends herere bvbvbvbv")
 	not := &(notification.Notification{
 		Id:        int32(res.ID),
 		Email:     res.Email,

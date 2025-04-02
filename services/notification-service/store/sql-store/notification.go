@@ -23,23 +23,23 @@ func (s *SQLNotificationStore) Get(ctx context.Context, pagination *PaginationPa
 
 	}
 
-	if filter.Email != nil {
-		query += " AND user_id = ?"
-		countQuery += " AND user_id = ?"
+	if filter != nil && filter.Email != nil {
+		query += " AND email = ?"
+		countQuery += " AND email = ?"
 		args = append(args, *filter.Email)
 	}
-	if filter.Phone != nil {
+	if filter != nil && filter.Phone != nil {
 		query += " AND phone = ?"
 		countQuery += " AND phone = ?"
 		args = append(args, *filter.Phone)
 	}
-	if filter.IsRead != nil {
+	if filter != nil && filter.IsRead != nil {
 		query += " AND isRead = ?"
 		countQuery += " AND isRead = ?"
 		args = append(args, *filter.IsRead)
 	}
 
-	query += " ORDER BY created_at DESC LIMIT ? OFFSET ?"
+	query += " ORDER BY createdAt DESC LIMIT ? OFFSET ?"
 	args = append(args, pagination.Limit, pagination.Offset)
 
 	rows, err := s.db.QueryContext(ctx, query, args...)
