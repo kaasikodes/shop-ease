@@ -2,10 +2,10 @@ package main
 
 import (
 	grpc_client "github.com/kaasikodes/shop-ease/services/auth-service/cmd/grpc"
-	"github.com/kaasikodes/shop-ease/services/auth-service/cmd/logger"
 	"github.com/kaasikodes/shop-ease/services/auth-service/internal/db"
 	"github.com/kaasikodes/shop-ease/services/auth-service/internal/env"
 	store "github.com/kaasikodes/shop-ease/services/auth-service/internal/store/sql-store"
+	"github.com/kaasikodes/shop-ease/shared/logger"
 	"github.com/kaasikodes/shop-ease/shared/proto/notification"
 )
 

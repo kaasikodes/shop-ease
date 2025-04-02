@@ -5,10 +5,12 @@ import (
 	"errors"
 
 	"github.com/kaasikodes/shop-ease/services/notification-service/store"
+	"github.com/kaasikodes/shop-ease/shared/logger"
 )
 
 type InAppNotificationService struct {
-	store store.NotificationStore
+	store  store.NotificationStore
+	logger logger.Logger
 }
 type InAppNotificationsPayload struct {
 	Notifications []InAppNotificationPayload `json:"notifications" validate:"min=1"`
@@ -20,8 +22,8 @@ type InAppNotificationPayload struct {
 	Content string `json:"content" validate:"required,min=5"`
 }
 
-func NewInAppNotificationService(store store.NotificationStore) *InAppNotificationService {
-	return &InAppNotificationService{store}
+func NewInAppNotificationService(store store.NotificationStore, logger logger.Logger) *InAppNotificationService {
+	return &InAppNotificationService{store, logger}
 
 }
 func (e *InAppNotificationService) Send(ctx context.Context, notification *store.Notification) error {
@@ -41,6 +43,7 @@ func (e *InAppNotificationService) Send(ctx context.Context, notification *store
 	if _, err := e.store.Create(ctx, notification); err != nil {
 		return err
 	}
+	e.logger.Info("IN_APP:", "notification sent ....")
 	return nil
 
 }

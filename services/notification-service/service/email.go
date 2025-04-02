@@ -6,6 +6,7 @@ import (
 	"log"
 
 	"github.com/kaasikodes/shop-ease/services/notification-service/store"
+	"github.com/kaasikodes/shop-ease/shared/logger"
 )
 
 type MailConfig struct {
@@ -13,6 +14,7 @@ type MailConfig struct {
 }
 type EmailNotificationService struct {
 	config MailConfig
+	logger logger.Logger
 }
 type EmailNotificationsPayload struct {
 	Notifications []EmailNotificationPayload `json:"notifications" validate:"min=1"`
@@ -23,14 +25,13 @@ type EmailNotificationPayload struct {
 	Content string `json:"content" validate:"required,min=5"`
 }
 
-func NewEmailNotificationService(cfg MailConfig) *EmailNotificationService {
-	log.Println("Address ...", cfg.Addr)
-	return &EmailNotificationService{config: cfg}
+func NewEmailNotificationService(cfg MailConfig, logger logger.Logger) *EmailNotificationService {
+	log.Println("Email Service Address ...", cfg.Addr)
+	return &EmailNotificationService{config: cfg, logger: logger}
 
 }
 
 func (e *EmailNotificationService) SendMultiple(ctx context.Context, notifications []store.Notification) error {
-	log.Println("Email Notifications sent ...", len(notifications))
 	if notifications == nil {
 		return errors.New("no notifications were passed in")
 	}
@@ -50,7 +51,6 @@ func (e *EmailNotificationService) SendMultiple(ctx context.Context, notificatio
 	return nil
 }
 func (e *EmailNotificationService) Send(ctx context.Context, notification *store.Notification) error {
-	log.Println("Email Notification sent ...", notification)
 
 	if notification == nil {
 		return errors.New("notification can not be nil")
@@ -64,6 +64,8 @@ func (e *EmailNotificationService) Send(ctx context.Context, notification *store
 		return err
 
 	}
+	e.logger.Info("EMAIL:", "notification sent ....")
+
 	return nil
 
 }

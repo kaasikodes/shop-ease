@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"github.com/go-chi/chi"
-	"github.com/kaasikodes/shop-ease/services/auth-service/cmd/logger"
 	"github.com/kaasikodes/shop-ease/services/auth-service/internal/store"
+	"github.com/kaasikodes/shop-ease/shared/logger"
 	"github.com/kaasikodes/shop-ease/shared/proto/notification"
 )
 
@@ -48,8 +48,8 @@ func (app *application) mount() http.Handler {
 	log.Println("Api mounted ....")
 	r := chi.NewRouter()
 
+	r.Get("/healthz", app.healthzHandler)
 	r.Route("/v1", func(r chi.Router) {
-		r.Get("/healthz", app.healthzHandler)
 		r.Route("/auth", func(r chi.Router) {
 			r.Post("/register", app.registerHandler) // customer(happy path), vendor
 			r.Post("/login", app.loginHandler)
