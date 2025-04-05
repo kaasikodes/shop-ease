@@ -3,10 +3,10 @@ package main
 import (
 	"log"
 
-	"github.com/kaasikodes/shop-ease/services/auth-service/cmd/logger"
 	"github.com/kaasikodes/shop-ease/services/auth-service/internal/db"
 	"github.com/kaasikodes/shop-ease/services/auth-service/internal/env"
 	store "github.com/kaasikodes/shop-ease/services/auth-service/internal/store/sql-store"
+	"github.com/kaasikodes/shop-ease/shared/logger"
 )
 
 func main() {

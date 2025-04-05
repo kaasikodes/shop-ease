@@ -7,8 +7,16 @@ type Config struct {
 	GrpcAddr string
 	Env      string
 	Db       DbConfig
+	Mail     MailConfig
 }
 
+type MailConfig struct {
+	FromEmail string
+	Host      string
+	Port      int
+	Username  string
+	Password  string
+}
 type DbConfig struct {
 	Addr         string
 	MaxOpenConns int
@@ -25,5 +33,13 @@ var ServiceConfig = Config{
 		MaxOpenConns: env.GetInt("DB_MAX_OPEN_CONNS", 30),
 		MaxIdleConns: env.GetInt("DB_MAX_IDLE_CONNS", 30),
 		MaxIdleTime:  env.GetString("DB_MAX_IDLE_TIME", "15m"),
+	},
+	Mail: MailConfig{
+		Host: "sandbox.smtp.mailtrap.io",
+		// Host:      "smtp.mailtrap.io",
+		FromEmail: "hello@shop-ease.com",
+		Port:      2525,
+		Username:  "6c53d765680ca4",
+		Password:  "83175273732073",
 	},
 }

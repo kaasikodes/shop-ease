@@ -2,6 +2,7 @@ package grpc_server
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"sync"
@@ -15,7 +16,8 @@ import (
 // Current Flow
 // Work on code to use air & Make file - Done
 // Optimize Code here - Done
-// Refactor to use go routines and take note of the time
+// Refactor to use go routines and take note of the time - Done, ignored time bench mark for the time being
+// Start with the email service, also might need to refactor the use of the notification handler for grpc as not all actions will require a all types of notification -> registration just requires email, and not inapp , might need sms
 // Also Flesh out the other service - sms, email (mail trap - and ensure you use templates to send the mail content), and in-app(use web sockets, and push notifications, as well as background jobs)
 // Work on grpc security
 // Remember to share project ...
@@ -68,21 +70,18 @@ func (n *NotificationGrpcHandler) Send(ctx context.Context, payload *notificatio
 	wg.Wait()
 
 	log.Println("Send ends herere bvbvbvbv")
-	not := &(notification.Notification{
-		Id:        int32(res.ID),
-		Email:     res.Email,
-		Phone:     res.Phone,
-		Title:     res.Title,
-		Content:   res.Content,
-		IsRead:    res.IsRead,
-		ReadAt:    res.ReadAt.String(),
-		CreatedAt: res.CreatedAt.String(),
-		UpdatedAt: res.UpdatedAt.String(),
-	})
+	not := &notification.Notification{
+		Id:      int32(res.ID),
+		Email:   res.Email,
+		Phone:   res.Phone,
+		Title:   res.Title,
+		Content: res.Content,
+		IsRead:  res.IsRead,
+	}
 	// If there were any errors, return them
 	if len(errs) > 0 {
 		// Return a single error that encapsulates all encountered errors
-		return not, fmt.Errorf("errors encountered: %v", errs)
+		return not, errors.Join(errs...)
 	}
 
 	return not, nil

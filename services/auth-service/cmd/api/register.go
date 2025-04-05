@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/kaasikodes/shop-ease/services/auth-service/internal/store"
@@ -47,7 +48,8 @@ func (app *application) registerHandler(w http.ResponseWriter, r *http.Request) 
 		app.badRequestResponse(w, r, err)
 		return
 	}
-	ctx := r.Context()
+	ctx, cancel := context.WithTimeout(r.Context(), time.Second*1)
+	defer cancel()
 	switch payload.RoleId {
 	case store.CustomerID:
 		user, verificationToken, err := app.registerCustomer(ctx, payload)
@@ -61,20 +63,26 @@ func (app *application) registerHandler(w http.ResponseWriter, r *http.Request) 
 			return
 		}
 		if verificationToken != nil {
-			app.logger.Info("Interaction with notification service begins  ....", *verificationToken)
-			n, err := app.notificationService.Send(ctx, &notification.NotificationRequest{
-				Email:   user.Email,
-				Title:   "Customer Verification",
-				Content: fmt.Sprintf("This is your verification token %s", *verificationToken),
-			},
-			)
-			if err != nil {
-				app.logger.Warn("Error interacting with the notification service", err)
+			go func() {
+				// Create a new context as I would like for the email been sent to operate independenty of the request context
+				ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+				defer cancel()
+				app.logger.Info("Interaction with notification service begins  ....", *verificationToken)
+				n, err := app.notificationService.Send(ctx, &notification.NotificationRequest{
+					Email:   user.Email,
+					Title:   "Customer Verification",
+					Content: fmt.Sprintf("This is your verification token %s", *verificationToken),
+				},
+				)
+				if err != nil {
+					app.logger.Warn("Error interacting with the notification service", err)
 
-			} else {
+				} else {
 
-				app.logger.Info("Success interacting with the notification service", n)
-			}
+					app.logger.Info("Success interacting with the notification service", n)
+				}
+
+			}()
 		}
 		app.jsonResponse(w, http.StatusCreated, "Customer account created successfully, please check email for a verification link!", user)
 		return

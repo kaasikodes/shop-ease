@@ -1,0 +1,3 @@
+#! /usr/bin/bash
+
+cd services/auth-service && air && cd ../.. && cd services/notification-service && air

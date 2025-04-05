@@ -44,9 +44,7 @@ func (s *gRPCServer) Run() error {
 	notificationServices := make([]service.NotificationService, 2)
 	notificationStore := sqlStore.Notification()
 	inAppService := service.NewInAppNotificationService(notificationStore, s.logger)
-	emailService := service.NewEmailNotificationService(service.MailConfig{
-		Addr: "",
-	}, s.logger)
+	emailService := service.NewEmailNotificationService(cfg.Mail, s.logger)
 	notificationServices[0] = inAppService
 	notificationServices[1] = emailService
 

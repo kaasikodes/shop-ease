@@ -3,15 +3,17 @@ package service
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log"
+	"sync"
 
+	"github.com/kaasikodes/shop-ease/services/notification-service/config"
 	"github.com/kaasikodes/shop-ease/services/notification-service/store"
 	"github.com/kaasikodes/shop-ease/shared/logger"
+	gomail "gopkg.in/mail.v2"
 )
 
-type MailConfig struct {
-	Addr string
-}
+type MailConfig = config.MailConfig
 type EmailNotificationService struct {
 	config MailConfig
 	logger logger.Logger
@@ -26,8 +28,26 @@ type EmailNotificationPayload struct {
 }
 
 func NewEmailNotificationService(cfg MailConfig, logger logger.Logger) *EmailNotificationService {
-	log.Println("Email Service Address ...", cfg.Addr)
+	log.Println("Email Service Address ...", cfg.FromEmail)
 	return &EmailNotificationService{config: cfg, logger: logger}
+
+}
+func (e *EmailNotificationService) sendMail(toEmails []string, subject string, body string) error {
+	message := gomail.NewMessage()
+	message.SetHeader("From", e.config.FromEmail)
+	message.SetHeader("To", toEmails...)
+	message.SetHeader("Subject", subject)
+	message.SetBody("text/plain", body)
+
+	dialer := gomail.NewDialer(e.config.Host, e.config.Port, e.config.Username, e.config.Password)
+	e.logger.Info("WHAT ARE THOSE", e.config.Host, e.config.Port, e.config.Username, e.config.Password)
+
+	err := dialer.DialAndSend(message)
+	if err != nil {
+		e.logger.Error("notification: error sending mail %v", err)
+		return err
+	}
+	return nil
 
 }
 
@@ -36,17 +56,42 @@ func (e *EmailNotificationService) SendMultiple(ctx context.Context, notificatio
 		return errors.New("no notifications were passed in")
 	}
 	payload := EmailNotificationsPayload{}
-	for _, n := range notifications {
-		payload.Notifications = append(payload.Notifications, EmailNotificationPayload{
+	payload.Notifications = make([]EmailNotificationPayload, len(notifications))
+
+	for i, n := range notifications {
+		payload.Notifications[i] = EmailNotificationPayload{
 			Email:   n.Email,
 			Title:   n.Title,
 			Content: n.Content,
-		})
+		}
 
 	}
 	if err := Validate.Struct(payload); err != nil {
 		return err
 
+	}
+	var errors []error
+	var mu sync.Mutex
+	var wg sync.WaitGroup
+	wg.Add(len(payload.Notifications))
+	for _, n := range payload.Notifications {
+		go func(notification EmailNotificationPayload) {
+			defer wg.Done()
+			toEmails := []string{notification.Email}
+
+			if err := e.sendMail(toEmails, notification.Title, notification.Content); err != nil {
+				mu.Lock()
+				errors = append(errors, err)
+				mu.Unlock()
+			}
+			e.logger.Info("EMAIL SENT to: %s", notification.Email)
+
+		}(n)
+
+	}
+	wg.Wait()
+	if len(errors) > 0 {
+		return fmt.Errorf("couple of errors encountered are: %v", errors)
 	}
 	return nil
 }
@@ -64,7 +109,12 @@ func (e *EmailNotificationService) Send(ctx context.Context, notification *store
 		return err
 
 	}
-	e.logger.Info("EMAIL:", "notification sent ....")
+	toEmails := []string{notification.Email}
+
+	if err := e.sendMail(toEmails, notification.Title, notification.Content); err != nil {
+		return err
+	}
+	e.logger.Info("EMAIL SENT to: %s", notification.Email)
 
 	return nil
 
