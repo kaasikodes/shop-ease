@@ -70,8 +70,7 @@ func (e *EmailNotificationService) SendMultiple(ctx context.Context, notificatio
 		return err
 
 	}
-	var errors []error
-	var mu sync.Mutex
+	var errCh = make(chan error, len(payload.Notifications))
 	var wg sync.WaitGroup
 	wg.Add(len(payload.Notifications))
 	for _, n := range payload.Notifications {
@@ -80,9 +79,7 @@ func (e *EmailNotificationService) SendMultiple(ctx context.Context, notificatio
 			toEmails := []string{notification.Email}
 
 			if err := e.sendMail(toEmails, notification.Title, notification.Content); err != nil {
-				mu.Lock()
-				errors = append(errors, err)
-				mu.Unlock()
+				errCh <- err
 			}
 			e.logger.Info("EMAIL SENT to: %s", notification.Email)
 
@@ -90,8 +87,16 @@ func (e *EmailNotificationService) SendMultiple(ctx context.Context, notificatio
 
 	}
 	wg.Wait()
-	if len(errors) > 0 {
-		return fmt.Errorf("couple of errors encountered are: %v", errors)
+	close(errCh)
+	var errs []error
+	for err := range errCh {
+		errs = append(errs, err)
+
+	}
+	if len(errs) > 0 {
+		e.logger.Error(fmt.Sprintf("Notiticatio::Errors errors while sending mail to %v", notifications), errors.Join(errs...))
+		return errors.Join(errs...)
+
 	}
 	return nil
 }
