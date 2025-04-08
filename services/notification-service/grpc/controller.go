@@ -20,7 +20,7 @@ import (
 // Start with the email service, also might need to refactor the use of the notification handler for grpc as not all actions will require a all types of notification -> registration just requires email, and not inapp , might need sms
 // Also Flesh out the other service - sms(will require payment so skip for now), email (mail trap - and ensure you use templates to send the mail content - Done, but not using html for time being.), and in-app(use web sockets, and push notifications, as well as background jobs)
 // Work on grpc security
-// Remember to share project ...
+
 
 // Next Project - should be an MCP.
 
