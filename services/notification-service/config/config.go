@@ -25,7 +25,6 @@ type DbConfig struct {
 }
 
 var ServiceConfig = Config{
-
 	ApiAddr:  env.GetString("API_ADDR", ":3020"),
 	GrpcAddr: env.GetString("GRPC_ADDR", ":5050"),
 	Db: DbConfig{
@@ -35,11 +34,10 @@ var ServiceConfig = Config{
 		MaxIdleTime:  env.GetString("DB_MAX_IDLE_TIME", "15m"),
 	},
 	Mail: MailConfig{
-		Host: "sandbox.smtp.mailtrap.io",
-		// Host:      "smtp.mailtrap.io",
-		FromEmail: "hello@shop-ease.com",
-		Port:      2525,
-		Username:  "6c53d765680ca4",
-		Password:  "83175273732073",
+		Host:      env.GetString("SMTP_HOST", "sandbox.smtp.mailtrap.io"),
+		Port:      env.GetInt("SMTP_PORT", 2525),
+		FromEmail: env.GetString("SMTP_FROM_EMAIL", "hello@shop-ease.com"),
+		Username:  env.GetString("SMTP_USERNAME", ""),
+		Password:  env.GetString("SMTP_PASSWORD", ""),
 	},
 }
