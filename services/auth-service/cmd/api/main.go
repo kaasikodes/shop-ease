@@ -36,9 +36,9 @@ func main() {
 	defer db.Close()
 	logger.Info("database connection estatblished")
 	// grpcConn
-	conn := grpc_client.NewGRPCClient(":5050")
-	defer conn.Close()
-	n := notification.NewNotificationServiceClient(conn)
+	notificationConn := grpc_client.NewGRPCClient(":5050")
+	defer notificationConn.Close()
+	n := notification.NewNotificationServiceClient(notificationConn)
 	var app = &application{
 		config:              cfg,
 		rateLimiter:         rateLimiterConfig{},
