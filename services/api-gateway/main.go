@@ -41,6 +41,9 @@ func run() error {
 
 	r.Handle("/auth/*", NewAuthProxyHandler())
 	r.Handle("/notification/*", NewNotificationProxyHandler())
+	// TODO: Implement the following middelwares
+	// auth, logging, tracing and then prometheus and grafan (for each service ?) -> then rabbit mq
+	// Then refactor on another branch to use proper setup for micro services & why its preferred to this, should also have service discovery
 
 	server := &http.Server{
 		Addr:         addr,

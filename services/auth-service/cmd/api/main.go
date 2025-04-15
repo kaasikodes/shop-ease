@@ -7,6 +7,7 @@ import (
 	store "github.com/kaasikodes/shop-ease/services/auth-service/internal/store/sql-store"
 	"github.com/kaasikodes/shop-ease/shared/logger"
 	"github.com/kaasikodes/shop-ease/shared/proto/notification"
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 const version = "0.0.0"
@@ -39,14 +40,17 @@ func main() {
 	notificationConn := grpc_client.NewGRPCClient(":5050")
 	defer notificationConn.Close()
 	n := notification.NewNotificationServiceClient(notificationConn)
+	metricsReg := prometheus.NewRegistry()
+	metrics := NewMetrics(metricsReg)
 	var app = &application{
 		config:              cfg,
 		rateLimiter:         rateLimiterConfig{},
 		logger:              logger,
 		store:               store.NewSQLStorage(db),
 		notificationService: n,
+		metrics:             metrics,
 	}
-	mux := app.mount()
+	mux := app.mount(metricsReg)
 
 	logger.Fatal(app.run(mux))
 

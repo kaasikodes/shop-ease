@@ -9,6 +9,8 @@ import (
 	"github.com/kaasikodes/shop-ease/services/auth-service/internal/store"
 	"github.com/kaasikodes/shop-ease/shared/logger"
 	"github.com/kaasikodes/shop-ease/shared/proto/notification"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 type config struct {
@@ -42,13 +44,20 @@ type application struct {
 	logger              logger.Logger
 	store               store.Storage
 	notificationService notification.NotificationServiceClient
+	metrics             *metrics
 }
 
-func (app *application) mount() http.Handler {
+func (app *application) mount(reg *prometheus.Registry) http.Handler {
 	log.Println("Api mounted ....")
 	r := chi.NewRouter()
+	// Add the metrics middleware
+	r.Use(app.metricsMiddleware)
 
 	r.Get("/healthz", app.healthzHandler)
+	r.Get("/metrics", func(w http.ResponseWriter, r *http.Request) {
+		promhttp.HandlerFor(reg, promhttp.HandlerOpts{Registry: reg}).ServeHTTP(w, r)
+		// promhttp.Handler().ServeHTTP(w, r)
+	})
 	r.Route("/v1", func(r chi.Router) {
 		r.Route("/auth", func(r chi.Router) {
 			r.Post("/register", app.registerHandler) // customer(happy path), vendor
@@ -90,6 +99,7 @@ func (app *application) run(mux http.Handler) error {
 	}
 
 	app.logger.Info("App running starting to run on .....", app.config.addr)
+
 	err := server.ListenAndServe()
 	log.Println("App running stopping to run on .....", app.config.addr)
 
