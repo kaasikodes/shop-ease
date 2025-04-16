@@ -2,14 +2,16 @@ package main
 
 import (
 	"net/http"
+	"regexp"
 	"strconv"
 	"time"
 )
 
 func (app *application) metricsMiddleware(next http.Handler) http.Handler {
-	// TODO: normalize paths (e.g., replace /v1/users/123 with /v1/users/:id) to reduce high cardinality in metrics.
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		path := r.URL.Path
+		normalizedPath := normalizePath(r.URL.Path)
+		// path := r.URL.Path
+		path := normalizedPath //normalize paths (e.g., replace /v1/users/123 with /v1/users/:id) to reduce high cardinality in metrics.
 		method := r.Method
 
 		start := time.Now()
@@ -46,6 +48,19 @@ func (app *application) metricsMiddleware(next http.Handler) http.Handler {
 			app.metrics.errorCount.WithLabelValues(path, method, strconv.Itoa(rw.statusCode)).Inc()
 		}
 	})
+}
+func normalizePath(path string) string {
+	// You can add more normalization patterns as needed
+	userIdPattern := regexp.MustCompile(`/v1/users/\d+`)
+	orderIdPattern := regexp.MustCompile(`/v1/orders/\d+`)
+	uuidPattern := regexp.MustCompile(`/[0-9a-fA-F\-]{36}`)
+
+	// Apply them in order
+	path = userIdPattern.ReplaceAllString(path, "/v1/users/:id")
+	path = orderIdPattern.ReplaceAllString(path, "/v1/orders/:id")
+	path = uuidPattern.ReplaceAllString(path, "/:uuid")
+
+	return path
 }
 
 // Custom response writer to capture response size and status code
