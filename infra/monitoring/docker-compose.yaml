@@ -25,6 +25,20 @@ services:
       - GF_SMTP_FROM_NAME=Grafana
     depends_on:
       - prometheus
+  promtail:
+    image: grafana/promtail:2.9.0
+    volumes:
+      - ./promtail-config.yml:/etc/promtail/promtail-config.yml
+      - ../../app.log:/var/log/app.log # <-- where log files will be located, TODO: later refactor to have and use a log folder
+    command: -config.file=/etc/promtail/promtail-config.yml
+    depends_on:
+      - loki
+
+  loki:
+    image: grafana/loki:latest
+    ports:
+      - "3100:3100"
+    command: -config.file=/etc/loki/local-config.yaml # Seems this was changed so just checked the container and update accordingly
 
 volumes:
   grafana-data:

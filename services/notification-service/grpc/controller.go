@@ -17,10 +17,10 @@ import (
 // Work on code to use air & Make file - Done
 // Optimize Code here - Done
 // Refactor to use go routines and take note of the time - Done, ignored time bench mark for the time being
+// Current flow - prometheus, grafana, loki, opentelemetry, Circuit breaker, service discovery(with plain api-gateway and no kubernetes), event-driven architecture (rabbitmq, kafka - agnostic is it possible), logging ..., grpc for streaming videos ... kubenetes, open source daily(the project picked earlier), MongoDB/Express/Service - say audit service, GraphQL - product service, elastisearch, AWS deployment after local setup via cloud formation, use lamda function to move log file though s3 storage ...
 // Start with the email service, also might need to refactor the use of the notification handler for grpc as not all actions will require a all types of notification -> registration just requires email, and not inapp , might need sms
 // Also Flesh out the other service - sms(will require payment so skip for now), email (mail trap - and ensure you use templates to send the mail content - Done, but not using html for time being.), and in-app(use web sockets, and push notifications, as well as background jobs)
 // Work on grpc security
-
 
 // Next Project - should be an MCP.
 

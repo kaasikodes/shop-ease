@@ -52,6 +52,7 @@ func (app *application) registerHandler(w http.ResponseWriter, r *http.Request) 
 	defer cancel()
 	switch payload.RoleId {
 	case store.CustomerID:
+		app.logger.Info("New Customer Registeration initiated ...")
 		user, verificationToken, err := app.registerCustomer(ctx, payload)
 		if err != nil {
 			if err == store.ErrDuplicateEmail {
@@ -85,6 +86,8 @@ func (app *application) registerHandler(w http.ResponseWriter, r *http.Request) 
 			}()
 		}
 		app.jsonResponse(w, http.StatusCreated, "Customer account created successfully, please check email for a verification link!", user)
+		app.logger.Info("New Customer Registeration was a success ...", user.Email)
+
 		return
 	case store.VendorID:
 		registerVendor()
