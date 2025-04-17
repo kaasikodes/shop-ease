@@ -71,6 +71,8 @@ func NewMetrics(reg *prometheus.Registry) *metrics {
 	return m
 }
 
-// gauge
-// counter
-// histogram
+// gauge - single variable value tracked
+// counter - incremental/decremental value
+// histogram - value tracked within duration more or less
+
+// TODO: Work on setting up prometheus server, and alert manager with docker and then move to implementing grafana. When done - implement loki, ...
