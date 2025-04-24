@@ -7,10 +7,12 @@ import (
 	"net/http"
 	"time"
 
+	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
 
 	"github.com/google/uuid"
 	"github.com/kaasikodes/shop-ease/services/auth-service/internal/store"
+	"github.com/kaasikodes/shop-ease/shared/observability"
 	"github.com/kaasikodes/shop-ease/shared/proto/notification"
 	"go.opentelemetry.io/otel/codes"
 )
@@ -58,6 +60,11 @@ func (app *application) registerHandler(w http.ResponseWriter, r *http.Request) 
 	}
 	ctx, cancel := context.WithTimeout(registerTraceCtx, time.Second*5)
 	defer cancel()
+	span.SetAttributes(
+		attribute.String("email", payload.Email),
+		attribute.String("name", payload.Name),
+		attribute.String("role", fmt.Sprintf("%v", payload.RoleId)),
+	)
 	switch payload.RoleId {
 	case store.CustomerID:
 		app.logger.Info("New Customer Registeration initiated ...")
@@ -102,7 +109,8 @@ func (app *application) registerHandler(w http.ResponseWriter, r *http.Request) 
 			}(vCtx)
 		}
 		app.jsonResponse(w, http.StatusCreated, "Customer account created successfully, please check email for a verification link!", user)
-		app.logger.Info("New Customer Registeration was a success ...", user.Email)
+		traceId, _ := observability.TraceInfoFromContext(registerTraceCtx)
+		app.logger.Info("New Customer Registeration was a success ...", user.Email, "TRACE ID", traceId)
 
 		return
 	case store.VendorID:

@@ -10,6 +10,7 @@ import (
 	"github.com/kaasikodes/shop-ease/services/notification-service/service"
 	"github.com/kaasikodes/shop-ease/services/notification-service/store"
 	"github.com/kaasikodes/shop-ease/shared/proto/notification"
+	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
 	"google.golang.org/grpc"
 )
@@ -90,6 +91,8 @@ func (n *NotificationGrpcHandler) Send(ctx context.Context, payload *notificatio
 				mu.Lock()
 				errs = append(errs, err)
 				mu.Unlock()
+				span.RecordError(err)
+				span.SetStatus(codes.Error, err.Error())
 			}
 
 		}(v)
@@ -108,8 +111,11 @@ func (n *NotificationGrpcHandler) Send(ctx context.Context, payload *notificatio
 	}
 	// If there were any errors, return them
 	if len(errs) > 0 {
+		errs := errors.Join(errs...)
 		// Return a single error that encapsulates all encountered errors
-		return not, errors.Join(errs...)
+		span.RecordError(errs)
+		span.SetStatus(codes.Error, errs.Error())
+		return not, errs
 	}
 
 	return not, nil
