@@ -75,7 +75,7 @@ func (app *application) registerHandler(w http.ResponseWriter, r *http.Request) 
 		}
 		if verificationToken != nil {
 
-			vCtx := trace.ContextWithSpan(context.Background(), trace.SpanFromContext(registerTraceCtx))
+			vCtx := trace.ContextWithSpan(context.Background(), trace.SpanFromContext(registerTraceCtx)) // enures tracing id is maintained across services but ensure that the context is independent of the initial request context
 			defer cancel()
 			go func(ctx context.Context) {
 
