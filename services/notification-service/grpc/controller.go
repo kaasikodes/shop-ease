@@ -16,7 +16,9 @@ import (
 )
 
 // Plan of Action
-// - Monitoring/Observability/Alerting - Prometheus, Loki, Grafana, OpenTelemetry, Moving to loki in grafana integration with, also see how to create a trace that has spans across services
+// - Monitoring/Observability/Alerting - Prometheus, Loki, Grafana, OpenTelemetry, Moving to loki in grafana integration with, also see how to create a trace that has spans across services - Done
+// Need to configure all log implemetations to have same format, zap to store logs in same file, and also a time of expiry to clear out the content of the file
+// Once done ensure that there is a standard of observability - metrics, logs, traces across services. Also spend a bit more time building relevant dashboards on grafana, configuring alerts, and how the setup of the dashboards can be reused or shared across projects/with individuals
 // - Implement Service 2 service communication with Rabbitmq and GRPC
 // - Implement all services
 // - Build the necessary dashboards for the services
