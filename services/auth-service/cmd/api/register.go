@@ -10,6 +10,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/kaasikodes/shop-ease/services/auth-service/internal/store"
 	"github.com/kaasikodes/shop-ease/shared/proto/notification"
+	"go.opentelemetry.io/otel/codes"
 )
 
 type RegisterUserPayload struct {
@@ -37,24 +38,31 @@ type VendorPayload struct {
 }
 
 func (app *application) registerHandler(w http.ResponseWriter, r *http.Request) {
+	registerTraceCtx, span := app.trace.Start(r.Context(), "register")
+
+	defer span.End()
 
 	// get the parameters from
 	var payload RegisterUserPayload
 	if err := readJson(w, r, &payload); err != nil {
+		span.RecordError(err)
 		app.badRequestResponse(w, r, err)
 		return
 	}
 	if err := Validate.Struct(payload); err != nil {
+		span.RecordError(err)
 		app.badRequestResponse(w, r, err)
 		return
 	}
-	ctx, cancel := context.WithTimeout(r.Context(), time.Second*1)
+	ctx, cancel := context.WithTimeout(registerTraceCtx, time.Second*1)
 	defer cancel()
 	switch payload.RoleId {
 	case store.CustomerID:
 		app.logger.Info("New Customer Registeration initiated ...")
 		user, verificationToken, err := app.registerCustomer(ctx, payload)
 		if err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, err.Error())
 			if err == store.ErrDuplicateEmail {
 				app.badRequestResponse(w, r, err)
 				return
@@ -68,6 +76,8 @@ func (app *application) registerHandler(w http.ResponseWriter, r *http.Request) 
 				// Create a new context as I would like for the email been sent to operate independenty of the request context
 				ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 				defer cancel()
+				_, span := app.trace.Start(registerTraceCtx, "sending verification token")
+				defer span.End()
 				app.logger.Info("Interaction with notification service begins  ....", *verificationToken)
 				n, err := app.notificationService.Send(ctx, &notification.NotificationRequest{
 					Email:   user.Email,
@@ -77,6 +87,8 @@ func (app *application) registerHandler(w http.ResponseWriter, r *http.Request) 
 				)
 				if err != nil {
 					app.logger.Warn("Error interacting with the notification service", err)
+					span.RecordError(err)
+					span.SetStatus(codes.Error, err.Error())
 
 				} else {
 
@@ -101,6 +113,8 @@ func (app *application) registerHandler(w http.ResponseWriter, r *http.Request) 
 
 }
 func (app *application) registerCustomer(ctx context.Context, payload RegisterUserPayload) (*store.User, *string, error) {
+	_, span := app.trace.Start(ctx, "register-customer")
+	defer span.End()
 	// create user acc
 	user := &store.User{
 		Name:  payload.Name,
@@ -113,6 +127,7 @@ func (app *application) registerCustomer(ctx context.Context, payload RegisterUs
 	err := app.store.Users().CreateWithVerificationToken(ctx, user, plainToken, ExpiresAtVerificationToken)
 
 	if err != nil {
+		span.RecordError(err)
 		return nil, nil, err
 	}
 

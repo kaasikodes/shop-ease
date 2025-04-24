@@ -11,6 +11,7 @@ import (
 	"github.com/kaasikodes/shop-ease/shared/proto/notification"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"go.opentelemetry.io/otel/trace"
 )
 
 type config struct {
@@ -45,6 +46,7 @@ type application struct {
 	store               store.Storage
 	notificationService notification.NotificationServiceClient
 	metrics             *metrics
+	trace               trace.Tracer
 }
 
 func (app *application) mount(reg *prometheus.Registry) http.Handler {

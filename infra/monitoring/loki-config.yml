@@ -1,5 +1,5 @@
 auth_enabled: false
-
+# Not really used the default in the container local-config.yaml
 server:
   http_listen_port: 3100
   grpc_listen_port: 9096

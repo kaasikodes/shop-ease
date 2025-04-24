@@ -13,11 +13,26 @@ import (
 	"google.golang.org/grpc"
 )
 
+// Plan of Action
+// - Monitoring/Observability/Alerting - Prometheus, Loki, Grafana, OpenTelemetry
+// - Implement Service 2 service communication with Rabbitmq and GRPC
+// - Implement all services
+// - Build the necessary dashboards for the services
+// - Refactor app to use K8s and kubernetes
+// - Also deploy app on aws with cloudformation, and then use terraform as well
+// - Purchase server and deploy - use jenkins here
+// - Once completed write a couple of articles: 1st article should be on the architecture
+// - Share with relevant groups - discord server project showcase, whatsapp group, linkedin ...
+
 // Current Flow
 // Work on code to use air & Make file - Done
 // Optimize Code here - Done
+// ** Side Quests- Play around with jenkins for ci/cd
+// ELK Stack
+// ArgoCD
+// gitlab
 // Refactor to use go routines and take note of the time - Done, ignored time bench mark for the time being
-// Current flow - prometheus, grafana, loki, opentelemetry, Circuit breaker, service discovery(with plain api-gateway and no kubernetes), event-driven architecture (rabbitmq, kafka - agnostic is it possible), logging ..., grpc for streaming videos ... kubenetes, open source daily(the project picked earlier), MongoDB/Express/Service - say audit service, GraphQL - product service, elastisearch, AWS deployment after local setup via cloud formation, use lamda function to move log file though s3 storage ...
+// Current flow - prometheus, grafana, loki, opentelemetry(Begin Here), ElastiSearch-kibana?, Circuit breaker, service discovery(with plain api-gateway and no kubernetes), event-driven architecture (rabbitmq, kafka - agnostic is it possible), logging ..., grpc for streaming videos ... kubenetes, open source daily(the project picked earlier), MongoDB/Express/Service - say audit service, GraphQL - product service, elastisearch, AWS deployment after local setup via cloud formation, use lamda function to move log file though s3 storage ...,
 // Start with the email service, also might need to refactor the use of the notification handler for grpc as not all actions will require a all types of notification -> registration just requires email, and not inapp , might need sms
 // Also Flesh out the other service - sms(will require payment so skip for now), email (mail trap - and ensure you use templates to send the mail content - Done, but not using html for time being.), and in-app(use web sockets, and push notifications, as well as background jobs)
 // Work on grpc security

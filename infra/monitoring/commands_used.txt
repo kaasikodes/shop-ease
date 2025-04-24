@@ -1,0 +1,20 @@
+    8  chocolatey
+    9  node -v
+   10  node -v
+   11  npm -v
+   12  node -v
+   13  npm -v
+   14  npm install --global yarn
+   15  npm install --global yarn
+   16  npm install --global yarn
+   17  yarn -v
+   18  npm install --global yo generator-code
+   19  cd infra/monitoring
+   20  docker-compose up -d
+   21  docker ps
+   22  docker ps -d
+   23  docker ps -a
+   24  docker run -it --entrypoint sh grafana/tempo
+   25  docker-compose down
+   26  docker-compose up -d
+   27  history 20 >> commands_used.txt

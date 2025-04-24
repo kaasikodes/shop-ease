@@ -6,13 +6,20 @@ import (
 	"github.com/kaasikodes/shop-ease/services/auth-service/internal/env"
 	store "github.com/kaasikodes/shop-ease/services/auth-service/internal/store/sql-store"
 	"github.com/kaasikodes/shop-ease/shared/logger"
+	"github.com/kaasikodes/shop-ease/shared/observability"
 	"github.com/kaasikodes/shop-ease/shared/proto/notification"
 	"github.com/prometheus/client_golang/prometheus"
+	"go.opentelemetry.io/otel"
 )
 
 const version = "0.0.0"
 
 func main() {
+	shutdown := observability.InitTracer("auth-service")
+	defer shutdown()
+
+	tr := otel.Tracer("example.com/trace")
+
 	logger := logger.New("../../app.log")
 	// logger := logger.NewZapLogger()
 	cfg := config{
@@ -49,6 +56,7 @@ func main() {
 		store:               store.NewSQLStorage(db),
 		notificationService: n,
 		metrics:             metrics,
+		trace:               tr,
 	}
 	mux := app.mount(metricsReg)
 

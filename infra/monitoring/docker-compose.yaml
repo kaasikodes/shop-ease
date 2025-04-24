@@ -40,5 +40,15 @@ services:
       - "3100:3100"
     command: -config.file=/etc/loki/local-config.yaml # Seems this was changed so just checked the container and update accordingly
 
+  tempo:
+    image: grafana/tempo:latest
+    ports:
+      - "3200:3200" # HTTP endpoint (optional, for debugging)
+      - "4317:4317" # gRPC OTLP receiver
+      - "4318:4318" # HTTP OTLP receiver
+    command: ["-config.file=/etc/tempo/tempo.yaml"]
+    volumes:
+      - ./tempo-config.yaml:/etc/tempo/tempo.yaml
+
 volumes:
   grafana-data:
