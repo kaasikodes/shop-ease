@@ -10,6 +10,9 @@ import (
 	"github.com/kaasikodes/shop-ease/services/notification-service/service"
 	store "github.com/kaasikodes/shop-ease/services/notification-service/store/sql-store"
 	"github.com/kaasikodes/shop-ease/shared/logger"
+	"github.com/kaasikodes/shop-ease/shared/observability"
+	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
+	"go.opentelemetry.io/otel"
 	"google.golang.org/grpc"
 )
 
@@ -33,7 +36,7 @@ func (s *gRPCServer) Run() error {
 		return fmt.Errorf("failed to listen: %w", err)
 	}
 
-	grpcServer := grpc.NewServer()
+	grpcServer := grpc.NewServer(grpc.UnaryInterceptor(otelgrpc.UnaryServerInterceptor()))
 	db, err := db.New(cfg.Db.Addr, cfg.Db.MaxOpenConns, cfg.Db.MaxIdleConns, cfg.Db.MaxIdleTime)
 	if err != nil {
 		return err
@@ -48,7 +51,13 @@ func (s *gRPCServer) Run() error {
 	notificationServices[0] = inAppService
 	notificationServices[1] = emailService
 
-	NewNotificiationGRPCHandler(grpcServer, notificationServices)
+	// tracer
+	shutdown := observability.InitTracer("notification-service")
+	defer shutdown()
+
+	trace := otel.Tracer("app.notification/trace")
+
+	NewNotificiationGRPCHandler(grpcServer, notificationServices, trace)
 	s.logger.Info("The GRPC SERVER IS UP >>>>>>")
 
 	return grpcServer.Serve(lis)

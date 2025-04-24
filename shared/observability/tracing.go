@@ -6,11 +6,14 @@ import (
 
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
+	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/sdk/resource"
 	"go.opentelemetry.io/otel/sdk/trace"
 	semconv "go.opentelemetry.io/otel/semconv/v1.21.0"
 	"google.golang.org/grpc"
 )
+
+var Propagator = propagation.TraceContext{}
 
 func InitTracer(serviceName string) func() {
 	ctx := context.Background()
@@ -42,6 +45,8 @@ func InitTracer(serviceName string) func() {
 		trace.WithResource(res),
 	)
 	otel.SetTracerProvider(tp)
+	otel.SetTextMapPropagator(Propagator)
+	log.Println("Started tracer ....")
 
 	// Shutdown func
 	return func() {

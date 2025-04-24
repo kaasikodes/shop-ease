@@ -6,7 +6,7 @@ require (
 	github.com/go-chi/chi v1.5.5
 	github.com/google/uuid v1.6.0
 	golang.org/x/crypto v0.33.0
-	google.golang.org/grpc v1.71.0
+	google.golang.org/grpc v1.72.0
 	google.golang.org/protobuf v1.36.6
 )
 
@@ -44,6 +44,7 @@ require (
 require (
 	github.com/go-playground/validator/v10 v10.26.0
 	github.com/go-sql-driver/mysql v1.9.1
+	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.60.0
 	go.uber.org/zap v1.27.0
 	golang.org/x/net v0.35.0
 	golang.org/x/sys v0.30.0 // indirect

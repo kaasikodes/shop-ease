@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"time"
 
+	"go.opentelemetry.io/otel/trace"
+
 	"github.com/google/uuid"
 	"github.com/kaasikodes/shop-ease/services/auth-service/internal/store"
 	"github.com/kaasikodes/shop-ease/shared/proto/notification"
@@ -54,7 +56,7 @@ func (app *application) registerHandler(w http.ResponseWriter, r *http.Request) 
 		app.badRequestResponse(w, r, err)
 		return
 	}
-	ctx, cancel := context.WithTimeout(registerTraceCtx, time.Second*1)
+	ctx, cancel := context.WithTimeout(registerTraceCtx, time.Second*5)
 	defer cancel()
 	switch payload.RoleId {
 	case store.CustomerID:
@@ -72,14 +74,16 @@ func (app *application) registerHandler(w http.ResponseWriter, r *http.Request) 
 			return
 		}
 		if verificationToken != nil {
-			go func() {
-				// Create a new context as I would like for the email been sent to operate independenty of the request context
-				ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-				defer cancel()
-				_, span := app.trace.Start(registerTraceCtx, "sending verification token")
+
+			vCtx := trace.ContextWithSpan(context.Background(), trace.SpanFromContext(registerTraceCtx))
+			defer cancel()
+			go func(ctx context.Context) {
+
+				tokenCtx, span := app.trace.Start(ctx, "sending verification token")
 				defer span.End()
+
 				app.logger.Info("Interaction with notification service begins  ....", *verificationToken)
-				n, err := app.notificationService.Send(ctx, &notification.NotificationRequest{
+				n, err := app.notificationService.Send(tokenCtx, &notification.NotificationRequest{
 					Email:   user.Email,
 					Title:   "Customer Verification",
 					Content: fmt.Sprintf("This is your verification token %s", *verificationToken),
@@ -95,7 +99,7 @@ func (app *application) registerHandler(w http.ResponseWriter, r *http.Request) 
 					app.logger.Info("Success interacting with the notification service", n)
 				}
 
-			}()
+			}(vCtx)
 		}
 		app.jsonResponse(w, http.StatusCreated, "Customer account created successfully, please check email for a verification link!", user)
 		app.logger.Info("New Customer Registeration was a success ...", user.Email)

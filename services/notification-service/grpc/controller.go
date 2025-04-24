@@ -10,11 +10,12 @@ import (
 	"github.com/kaasikodes/shop-ease/services/notification-service/service"
 	"github.com/kaasikodes/shop-ease/services/notification-service/store"
 	"github.com/kaasikodes/shop-ease/shared/proto/notification"
+	"go.opentelemetry.io/otel/trace"
 	"google.golang.org/grpc"
 )
 
 // Plan of Action
-// - Monitoring/Observability/Alerting - Prometheus, Loki, Grafana, OpenTelemetry
+// - Monitoring/Observability/Alerting - Prometheus, Loki, Grafana, OpenTelemetry, Moving to loki in grafana integration with, also see how to create a trace that has spans across services
 // - Implement Service 2 service communication with Rabbitmq and GRPC
 // - Implement all services
 // - Build the necessary dashboards for the services
@@ -41,11 +42,13 @@ import (
 
 type NotificationGrpcHandler struct {
 	services []service.NotificationService
+	trace    trace.Tracer
 	notification.UnimplementedNotificationServiceServer
 }
 
-func NewNotificiationGRPCHandler(s *grpc.Server, services []service.NotificationService) {
-	handler := &NotificationGrpcHandler{services: services}
+func NewNotificiationGRPCHandler(s *grpc.Server, services []service.NotificationService, trace trace.Tracer) {
+
+	handler := &NotificationGrpcHandler{services: services, trace: trace}
 
 	// register the NotificationServiceServer
 	notification.RegisterNotificationServiceServer(s, handler)
@@ -53,6 +56,14 @@ func NewNotificiationGRPCHandler(s *grpc.Server, services []service.Notification
 }
 
 func (n *NotificationGrpcHandler) Send(ctx context.Context, payload *notification.NotificationRequest) (*notification.Notification, error) {
+	// md, ok := metadata.FromIncomingContext(ctx)
+	// log.Println("Incoming", md)
+	// if !ok {
+	// 	return nil, errors.New("issue retrieving metdata from context")
+	// }
+	// ctx = observability.Propagator.Extract(ctx, propagation.HeaderCarrier(md))
+	parentNotificationCtx, span := n.trace.Start(ctx, "send notification")
+	defer span.End()
 	phone := ""
 	if payload.Phone != nil {
 		phone = *payload.Phone
@@ -64,15 +75,17 @@ func (n *NotificationGrpcHandler) Send(ctx context.Context, payload *notificatio
 		Title:   payload.Title,
 		Content: payload.Content,
 	}
-	log.Println("Send Statrts herere")
+	log.Println("Send Starts herere")
 	var errs []error
 	var wg sync.WaitGroup
 	var mu sync.Mutex
 	wg.Add(len(n.services))
-	for _, v := range n.services {
+	for i, v := range n.services {
 		go func(service service.NotificationService) {
 			defer wg.Done()
 			err := service.Send(ctx, res)
+			_, span := n.trace.Start(parentNotificationCtx, fmt.Sprintf("sending notification by %v service", i))
+			defer span.End()
 			if err != nil {
 				mu.Lock()
 				errs = append(errs, err)
