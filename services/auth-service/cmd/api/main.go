@@ -13,15 +13,20 @@ import (
 )
 
 const version = "0.0.0"
+const serviceIdentifier = "auth-service"
 
 func main() {
 	shutdown := observability.InitTracer("auth-service")
 	defer shutdown()
 
 	tr := otel.Tracer("example.com/trace")
-
-	logger := logger.New("../../app.log")
-	// logger := logger.NewZapLogger()
+	logCfg := logger.LogConfig{
+		LogFilePath:       "../../app.log",
+		Format:            logger.DefaultLogFormat,
+		PrimaryIdentifier: serviceIdentifier,
+	}
+	// logger := logger.New(logCfg)
+	logger := logger.NewZapLogger(logCfg)
 	cfg := config{
 		addr:        env.GetString("ADDR", ":3010"),
 		apiURL:      env.GetString("API_URL", "localhost:9010"),

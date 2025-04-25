@@ -9,6 +9,7 @@ import (
 
 	"github.com/kaasikodes/shop-ease/services/notification-service/service"
 	"github.com/kaasikodes/shop-ease/services/notification-service/store"
+	"github.com/kaasikodes/shop-ease/shared/logger"
 	"github.com/kaasikodes/shop-ease/shared/proto/notification"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
@@ -17,9 +18,10 @@ import (
 
 // Plan of Action
 // - Monitoring/Observability/Alerting - Prometheus, Loki, Grafana, OpenTelemetry, Moving to loki in grafana integration with, also see how to create a trace that has spans across services - Done
-// Need to configure all log implemetations to have same format, zap to store logs in same file, and also a time of expiry to clear out the content of the file
+// Need to configure all log implemetations to have same format, zap to store logs in same file, and also a time of expiry to clear out the content of the file - Done(but zap, and default have different formats-probably can ensure same format by updating format to match zap)
 // Once done ensure that there is a standard of observability - metrics, logs, traces across services. Also spend a bit more time building relevant dashboards on grafana, configuring alerts, and how the setup of the dashboards can be reused or shared across projects/with individuals
 // Also don't forget to link aync operations like events into traces as well
+// Refactor the depecrated grpc interceptors used in traceing
 // - Implement Service 2 service communication with Rabbitmq and GRPC
 // - Implement all services
 // - Build the necessary dashboards for the services
@@ -47,12 +49,14 @@ import (
 type NotificationGrpcHandler struct {
 	services []service.NotificationService
 	trace    trace.Tracer
+	logger   logger.Logger
+
 	notification.UnimplementedNotificationServiceServer
 }
 
-func NewNotificiationGRPCHandler(s *grpc.Server, services []service.NotificationService, trace trace.Tracer) {
+func NewNotificiationGRPCHandler(s *grpc.Server, services []service.NotificationService, trace trace.Tracer, logger logger.Logger) {
 
-	handler := &NotificationGrpcHandler{services: services, trace: trace}
+	handler := &NotificationGrpcHandler{services: services, trace: trace, logger: logger}
 
 	// register the NotificationServiceServer
 	notification.RegisterNotificationServiceServer(s, handler)
@@ -68,6 +72,7 @@ func (n *NotificationGrpcHandler) Send(ctx context.Context, payload *notificatio
 	// ctx = observability.Propagator.Extract(ctx, propagation.HeaderCarrier(md))
 	parentNotificationCtx, span := n.trace.Start(ctx, "send notification")
 	defer span.End()
+	n.logger.WithContext(ctx).Info("send notification starts")
 	phone := ""
 	if payload.Phone != nil {
 		phone = *payload.Phone

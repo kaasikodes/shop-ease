@@ -119,7 +119,7 @@ func (e *EmailNotificationService) Send(ctx context.Context, notification *store
 	if err := e.sendMail(toEmails, notification.Title, notification.Content); err != nil {
 		return err
 	}
-	e.logger.Info("EMAIL SENT to: %s", notification.Email)
+	e.logger.WithContext(ctx).Info("EMAIL SENT to: %s", notification.Email)
 
 	return nil
 

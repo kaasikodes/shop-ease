@@ -12,7 +12,6 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/kaasikodes/shop-ease/services/auth-service/internal/store"
-	"github.com/kaasikodes/shop-ease/shared/observability"
 	"github.com/kaasikodes/shop-ease/shared/proto/notification"
 	"go.opentelemetry.io/otel/codes"
 )
@@ -89,7 +88,7 @@ func (app *application) registerHandler(w http.ResponseWriter, r *http.Request) 
 				tokenCtx, span := app.trace.Start(ctx, "sending verification token")
 				defer span.End()
 
-				app.logger.Info("Interaction with notification service begins  ....", *verificationToken)
+				app.logger.WithContext(ctx).Info("Interaction with notification service begins  ....", *verificationToken)
 				n, err := app.notificationService.Send(tokenCtx, &notification.NotificationRequest{
 					Email:   user.Email,
 					Title:   "Customer Verification",
@@ -109,8 +108,7 @@ func (app *application) registerHandler(w http.ResponseWriter, r *http.Request) 
 			}(vCtx)
 		}
 		app.jsonResponse(w, http.StatusCreated, "Customer account created successfully, please check email for a verification link!", user)
-		traceId, _ := observability.TraceInfoFromContext(registerTraceCtx)
-		app.logger.Info("New Customer Registeration was a success ...", user.Email, "TRACE ID", traceId)
+		app.logger.WithContext(registerTraceCtx).Info("New Customer Registeration was a success ...", user.Email)
 
 		return
 	case store.VendorID:

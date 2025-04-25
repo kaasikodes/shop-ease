@@ -52,7 +52,11 @@ func run() error {
 		ReadTimeout:  time.Second * 10,
 		IdleTimeout:  time.Minute,
 	}
-	logger := logger.New("../../app.log")
+	logCfg := logger.LogConfig{
+		LogFilePath: "../../app.log",
+		Format:      "",
+	}
+	logger := logger.New(logCfg)
 	logger.Info("App running starting to run on .....", addr)
 	err := server.ListenAndServe()
 

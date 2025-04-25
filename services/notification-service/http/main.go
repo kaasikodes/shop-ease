@@ -13,7 +13,12 @@ import (
 const version = "0.0.0"
 
 func main() {
-	logger := logger.New("../../app.log")
+	logCfg := logger.LogConfig{
+		LogFilePath:       "../../app.log",
+		Format:            logger.DefaultLogFormat,
+		PrimaryIdentifier: "notification-service",
+	}
+	logger := logger.New(logCfg)
 	wg := sync.WaitGroup{}
 	wg.Add(2)
 	go func() {

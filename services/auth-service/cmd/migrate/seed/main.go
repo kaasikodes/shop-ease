@@ -11,8 +11,10 @@ import (
 
 func main() {
 	addr := env.GetString("DB_ADDR", "root:root123$@tcp(localhost:3306)/shop_ease")
-
-	l := logger.New("../../app.log")
+	logCfg := logger.LogConfig{
+		LogFilePath: "../../app.log",
+	}
+	l := logger.New(logCfg)
 	l.Info(addr, "DB_ADDR ...")
 
 	conn, err := db.New(addr, 10, 10, "5m")

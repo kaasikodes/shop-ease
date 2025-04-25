@@ -57,7 +57,7 @@ func (s *gRPCServer) Run() error {
 
 	trace := otel.Tracer("app.notification/trace")
 
-	NewNotificiationGRPCHandler(grpcServer, notificationServices, trace)
+	NewNotificiationGRPCHandler(grpcServer, notificationServices, trace, s.logger)
 	s.logger.Info("The GRPC SERVER IS UP >>>>>>")
 
 	return grpcServer.Serve(lis)
