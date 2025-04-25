@@ -14,5 +14,5 @@ scrape_configs:
       - targets:
           - localhost
         labels:
-          job: auth-service
+          job: shop-ease
           __path__: /var/log/*.log
