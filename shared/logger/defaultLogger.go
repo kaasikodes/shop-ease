@@ -8,6 +8,7 @@ import (
 	"os"
 
 	"go.opentelemetry.io/otel/trace"
+	"gopkg.in/natefinch/lumberjack.v2"
 )
 
 // DefaultLogger (uses Go's built-in log package)
@@ -21,24 +22,24 @@ type DefaultLogger struct {
 
 // New creates a new instance of DefaultLogger
 func New(config LogConfig) Logger {
-	file, err := os.OpenFile(config.LogFilePath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
-	if err != nil {
-		log.Fatal("Failed to open log file:", err)
-	}
-
-	// Create a multi-writer (logs to file + terminal)
-	multiWriter := io.MultiWriter(os.Stdout, file)
 
 	// Initialize the logger
-	format := config.Format
-	if len(config.Format) == 0 {
-		format = DefaultLogFormat
 
+	config = defineLogConfig(config)
+	lumberjackLogger := &lumberjack.Logger{ //for auto deletion of log files
+		Filename:   config.LogFilePath,
+		MaxSize:    config.MaxSizeMB,
+		MaxBackups: config.MaxBackups,
+		MaxAge:     config.MaxAgeDays,
+		Compress:   *config.Compress,
 	}
+	// Create a multi-writer (logs to file + terminal)
+	multiWriter := io.MultiWriter(os.Stdout, lumberjackLogger)
+
 	return &DefaultLogger{
 		logFile:           config.LogFilePath,
 		logger:            log.New(multiWriter, "", log.LstdFlags),
-		format:            format,
+		format:            config.Format,
 		primaryIdentifier: config.PrimaryIdentifier,
 	}
 }
