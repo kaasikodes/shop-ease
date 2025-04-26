@@ -1,0 +1,10 @@
+#! /usr/bin/bash
+
+echo "starts"
+ls ./services/notification-service 
+cd ./services/notification-service 
+direnv allow .
+air
+echo "stops"
+
+

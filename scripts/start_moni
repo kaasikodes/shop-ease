@@ -1,0 +1,9 @@
+#! /usr/bin/bash
+
+echo "Starts ..."
+ls ./infra/monitoring
+cd ./infra/monitoring
+docker-compose up -d
+echo "Done ..."
+
+

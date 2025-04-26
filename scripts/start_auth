@@ -1,0 +1,8 @@
+#!/usr/bin/bash
+
+echo "starts"
+ls ./services/auth-service 
+cd ./services/auth-service 
+direnv allow .
+air
+echo "stops"
