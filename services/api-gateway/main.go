@@ -53,7 +53,7 @@ func run() error {
 		IdleTimeout:  time.Minute,
 	}
 	logCfg := logger.LogConfig{
-		LogFilePath: "../../app.log",
+		LogFilePath: "../../logs/api-gateway.log",
 		Format:      "",
 	}
 	logger := logger.New(logCfg)

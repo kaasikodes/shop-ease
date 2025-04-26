@@ -14,7 +14,7 @@ func main() {
 	addr := env.GetString("DB_ADDR", "root:root123$@tcp(localhost:3306)/shop_ease")
 
 	logCfg := logger.LogConfig{
-		LogFilePath: "../../app.log",
+		LogFilePath: "../../logs/auth-service.log",
 	}
 	l := logger.New(logCfg)
 	l.Info(addr, "DB_ADDR ...")

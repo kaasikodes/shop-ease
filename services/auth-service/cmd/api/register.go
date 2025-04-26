@@ -48,12 +48,16 @@ func (app *application) registerHandler(w http.ResponseWriter, r *http.Request) 
 	// get the parameters from
 	var payload RegisterUserPayload
 	if err := readJson(w, r, &payload); err != nil {
+		app.logger.WithContext(registerTraceCtx).Error("Error reading user registration payload as json", err)
 		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
 		app.badRequestResponse(w, r, err)
 		return
 	}
 	if err := Validate.Struct(payload); err != nil {
+		app.logger.WithContext(registerTraceCtx).Error("Error validating registration payload", err)
 		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
 		app.badRequestResponse(w, r, err)
 		return
 	}
@@ -69,9 +73,11 @@ func (app *application) registerHandler(w http.ResponseWriter, r *http.Request) 
 		app.logger.Info("New Customer Registeration initiated ...")
 		user, verificationToken, err := app.registerCustomer(ctx, payload)
 		if err != nil {
+			app.logger.WithContext(registerTraceCtx).Error("Error registering customer", err)
 			span.RecordError(err)
 			span.SetStatus(codes.Error, err.Error())
 			if err == store.ErrDuplicateEmail {
+
 				app.badRequestResponse(w, r, err)
 				return
 
@@ -96,7 +102,7 @@ func (app *application) registerHandler(w http.ResponseWriter, r *http.Request) 
 				},
 				)
 				if err != nil {
-					app.logger.Warn("Error interacting with the notification service", err)
+					app.logger.WithContext(ctx).Error("Error interacting with the notification service", err)
 					span.RecordError(err)
 					span.SetStatus(codes.Error, err.Error())
 

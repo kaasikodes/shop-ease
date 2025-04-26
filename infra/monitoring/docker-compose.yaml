@@ -29,7 +29,7 @@ services:
     image: grafana/promtail:2.9.0
     volumes:
       - ./promtail-config.yml:/etc/promtail/promtail-config.yml
-      - ../../app.log:/var/log/app.log # <-- where log files will be located, TODO: later refactor to have and use a log folder
+      - ../../logs:/var/log/ # <-- where log files will be located
     command: -config.file=/etc/promtail/promtail-config.yml
     depends_on:
       - loki

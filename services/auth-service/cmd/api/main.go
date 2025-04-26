@@ -21,7 +21,7 @@ func main() {
 
 	tr := otel.Tracer("example.com/trace")
 	logCfg := logger.LogConfig{
-		LogFilePath:       "../../app.log",
+		LogFilePath:       "../../logs/auth-service.log",
 		Format:            logger.DefaultLogFormat,
 		PrimaryIdentifier: serviceIdentifier,
 	}

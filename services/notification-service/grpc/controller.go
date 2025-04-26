@@ -19,9 +19,12 @@ import (
 // Plan of Action
 // - Monitoring/Observability/Alerting - Prometheus, Loki, Grafana, OpenTelemetry, Moving to loki in grafana integration with, also see how to create a trace that has spans across services - Done
 // Need to configure all log implemetations to have same format, zap to store logs in same file, and also a time of expiry to clear out the content of the file - Done(but zap, and default have different formats-probably can ensure same format by updating format to match zap)
+// TODO: Implement log rotattion with lumber jack
+// Work on fleshing out services, create queue(use Kafka) system to use for service-service communications that require it, ensure these events are traced as well
+// Build payment service that will have an interface that will allow for the use of different payment gateways
 // Once done ensure that there is a standard of observability - metrics, logs, traces across services. Also spend a bit more time building relevant dashboards on grafana, configuring alerts, and how the setup of the dashboards can be reused or shared across projects/with individuals
 // Also don't forget to link aync operations like events into traces as well
-// Refactor the depecrated grpc interceptors used in traceing
+// Refactor the depecrated grpc interceptors used in tracing
 // - Implement Service 2 service communication with Rabbitmq and GRPC
 // - Implement all services
 // - Build the necessary dashboards for the services

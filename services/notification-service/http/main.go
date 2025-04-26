@@ -11,12 +11,13 @@ import (
 )
 
 const version = "0.0.0"
+const serviceIdentifier = "notification-service"
 
 func main() {
 	logCfg := logger.LogConfig{
-		LogFilePath:       "../../app.log",
+		LogFilePath:       "../../logs/notification-service.log",
 		Format:            logger.DefaultLogFormat,
-		PrimaryIdentifier: "notification-service",
+		PrimaryIdentifier: serviceIdentifier,
 	}
 	logger := logger.New(logCfg)
 	wg := sync.WaitGroup{}
