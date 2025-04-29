@@ -12,6 +12,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/kaasikodes/shop-ease/services/auth-service/internal/store"
+	"github.com/kaasikodes/shop-ease/shared/kafka"
 	"github.com/kaasikodes/shop-ease/shared/proto/notification"
 	"go.opentelemetry.io/otel/codes"
 )
@@ -68,6 +69,12 @@ func (app *application) registerHandler(w http.ResponseWriter, r *http.Request) 
 		attribute.String("name", payload.Name),
 		attribute.String("role", fmt.Sprintf("%v", payload.RoleId)),
 	)
+	// kafka test
+	app.logger.Info("kafka lets go ...")
+	err := kafka.PublishMessage(payload.Name, payload.Email)
+	if err != nil {
+		app.logger.Error(err, "Kafka error ....")
+	}
 	switch payload.RoleId {
 	case store.CustomerID:
 		app.logger.Info("New Customer Registeration initiated ...")

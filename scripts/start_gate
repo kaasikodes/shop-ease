@@ -3,8 +3,8 @@
 echo "starts"
 ls ./services/api-gateway
 cd ./services/api-gateway
-# direnv allow .
 go run .
+# direnv allow .
 echo "stops"
 
 

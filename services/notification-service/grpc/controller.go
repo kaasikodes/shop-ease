@@ -19,7 +19,15 @@ import (
 // Plan of Action
 // - Monitoring/Observability/Alerting - Prometheus, Loki, Grafana, OpenTelemetry, Moving to loki in grafana integration with, also see how to create a trace that has spans across services - Done
 // Need to configure all log implemetations to have same format, zap to store logs in same file, and also a time of expiry to clear out the content of the file - Done(but zap, and default have different formats-probably can ensure same format by updating format to match zap)
-// TODO: Implement log rotattion with lumber jack
+// TODO: Implement log rotattion with lumber jack - Done
+// Implement kafka
+// Implement caching with redis  - to reduce number of requests for services like products
+// Implement ratelimiting per ip
+// How to prevent ddos
+// Also when logging, as well as showing metrics is it possible to add the ip/device/browser the request was made from, this could be used to create really cool dashboards in grafana (also is it possible to then create dashoards that show the number/volume of requests from a certain geographical region)
+// Also is it ok to just use grafana for analytics on the basis of metrics, logs, and traces or is it a bit short sighted and is there something else
+// Protect against ddos
+// Asides: GraphQL, MongoDB, Aurora, Elastisearch, Datadog
 // Work on fleshing out services, create queue(use Kafka) system to use for service-service communications that require it, ensure these events are traced as well
 // Build payment service that will have an interface that will allow for the use of different payment gateways
 // Once done ensure that there is a standard of observability - metrics, logs, traces across services. Also spend a bit more time building relevant dashboards on grafana, configuring alerts, and how the setup of the dashboards can be reused or shared across projects/with individuals
