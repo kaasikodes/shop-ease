@@ -4,9 +4,11 @@ import (
 	"github.com/streadway/amqp"
 )
 
+// TODO: Revisit code
 type RabbitMQHelper struct {
-	conn    *amqp.Connection
-	channel *amqp.Channel
+	conn                                     *amqp.Connection
+	channel                                  *amqp.Channel
+	RequeueMsgsWithErrorsWhileBeingProcessed bool //this feature is unique to the rabbitmq implementation consider adding to kafka implemention
 }
 
 func NewRabbitMQHelper(url string) (*RabbitMQHelper, error) {
@@ -19,7 +21,7 @@ func NewRabbitMQHelper(url string) (*RabbitMQHelper, error) {
 		return nil, err
 	}
 
-	return &RabbitMQHelper{conn: conn, channel: ch}, nil
+	return &RabbitMQHelper{conn: conn, channel: ch, RequeueMsgsWithErrorsWhileBeingProcessed: false}, nil
 }
 
 func (r *RabbitMQHelper) Publish(queue string, message []byte) error {
@@ -34,7 +36,7 @@ func (r *RabbitMQHelper) Publish(queue string, message []byte) error {
 	})
 }
 
-func (r *RabbitMQHelper) Subscribe(queue string, handler func(msg []byte)) error {
+func (r *RabbitMQHelper) Subscribe(queue string, handler func(msg []byte) error) error {
 	msgs, err := r.channel.Consume(queue, "", true, false, false, false, nil)
 	if err != nil {
 		return err
@@ -42,7 +44,13 @@ func (r *RabbitMQHelper) Subscribe(queue string, handler func(msg []byte)) error
 
 	go func() {
 		for d := range msgs {
-			handler(d.Body)
+			err := handler(d.Body)
+			if err != nil {
+				d.Ack(true)
+
+			} else {
+				d.Nack(false, r.RequeueMsgsWithErrorsWhileBeingProcessed)
+			}
 
 		}
 	}()

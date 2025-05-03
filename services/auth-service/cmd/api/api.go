@@ -7,6 +7,7 @@ import (
 
 	"github.com/go-chi/chi"
 	"github.com/kaasikodes/shop-ease/services/auth-service/internal/store"
+	"github.com/kaasikodes/shop-ease/shared/broker"
 	"github.com/kaasikodes/shop-ease/shared/logger"
 	"github.com/kaasikodes/shop-ease/shared/proto/notification"
 	"github.com/prometheus/client_golang/prometheus"
@@ -42,11 +43,14 @@ type dbConfig struct {
 type application struct {
 	config              config
 	rateLimiter         rateLimiterConfig
-	logger              logger.Logger
 	store               store.Storage
 	notificationService notification.NotificationServiceClient
-	metrics             *metrics
-	trace               trace.Tracer
+	// observability & monitoring
+	metrics *metrics
+	trace   trace.Tracer
+	logger  logger.Logger
+	// message broker
+	broker broker.MessageBroker
 }
 
 func (app *application) mount(reg *prometheus.Registry) http.Handler {

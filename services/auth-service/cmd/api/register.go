@@ -159,6 +159,19 @@ func (app *application) registerCustomer(ctx context.Context, payload RegisterUs
 
 }
 func registerVendor() {
+	// the payload should account for the subscription plan selected as a vendor,
+	// a vendor acccount should be created (vendor service will have a middleware that will always check with subscription service wether or not the the vendor_sub_plan_is_active)
+	// Talk to subscription service to update the vendors on this plan
+	// subscription service should contain vendors that belong to a subscription and when their subscription expires, subscription should have instances that are tied to vendors in the event that a subscription plan is modified, - emit subscription created
+	// now the payment service will contain the webhook and when informed of payment will inform the sunscription service that payment is complete
+	// on receing that subscrption service updates the vendor subscription
+	// now each the vendor will have a middleware that checks wether the vendor is active,
+	// now on subscription.vendor_plan_renewed the vendor service is notified to activate vendor account, and on subscription.vendor_plan_expired the vendor service is deactivate
+
+	// FLow
+	// a if user already exists that is fine, as will be uspsert expect for the subscription service where the rule is a vendor can have only one active plan(enforce on db level[not possible, so on code level, and add middleware to perform check])
+	// Dont send a verification until payment is made,and on payment is made regardles of the invalidity of mail or whatever verify account
+	// auth -> vendor service (create inactive vendor, with the user_id specified) -> subscription (create an instance plan for vendor -snapshot  of plan at the moment, amount_to_be paid, plan_id, vendor_id, isActive(yes or no), paidAt, isPaid, CU, expiredAt, ). -> payment (receives the sub_plan_instance_id, and the amount, and creates a payment link): Auth then Returns a message to client with link and message of user to complete payment with link provided. Payment service has webhook with the gateway concerned and on confirmation will emit payment.vendor_plan_paid and subscriptio will listen and update the plan_instance_id, notification service will listen as well and notify the user that the vendor account is activated
 
 }
 

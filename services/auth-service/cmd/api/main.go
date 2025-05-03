@@ -5,6 +5,8 @@ import (
 	"github.com/kaasikodes/shop-ease/services/auth-service/internal/db"
 	"github.com/kaasikodes/shop-ease/services/auth-service/internal/env"
 	store "github.com/kaasikodes/shop-ease/services/auth-service/internal/store/sql-store"
+	"github.com/kaasikodes/shop-ease/shared/broker"
+	"github.com/kaasikodes/shop-ease/shared/events"
 	"github.com/kaasikodes/shop-ease/shared/kafka"
 	"github.com/kaasikodes/shop-ease/shared/logger"
 	"github.com/kaasikodes/shop-ease/shared/observability"
@@ -59,6 +61,8 @@ func main() {
 	n := notification.NewNotificationServiceClient(notificationConn)
 	metricsReg := prometheus.NewRegistry()
 	metrics := NewMetrics(metricsReg)
+	broker := broker.NewKafkaHelper([]string{":9092"}, events.AuthTopic)
+	defer broker.Close()
 	var app = &application{
 		config:              cfg,
 		rateLimiter:         rateLimiterConfig{},
@@ -67,6 +71,7 @@ func main() {
 		notificationService: n,
 		metrics:             metrics,
 		trace:               tr,
+		broker:              broker,
 	}
 	mux := app.mount(metricsReg)
 

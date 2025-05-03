@@ -19,7 +19,7 @@ type KafkaHelper struct {
 	cancel  context.CancelFunc
 }
 
-func NewKafkaWriter(brokers []string, topic string) *KafkaHelper {
+func NewKafkaHelper(brokers []string, topic string) *KafkaHelper {
 	ctx, cancel := context.WithCancel(context.Background())
 	helper := &KafkaHelper{
 		writer: kafka.NewWriter(kafka.WriterConfig{
@@ -35,7 +35,7 @@ func NewKafkaWriter(brokers []string, topic string) *KafkaHelper {
 
 }
 
-func (k *KafkaHelper) Subscribe(topic string, handler func(msg []byte)) error {
+func (k *KafkaHelper) Subscribe(topic string, handler func(msg []byte) error) error {
 	reader := kafka.NewReader(kafka.ReaderConfig{
 		Brokers:     k.brokers,
 		Topic:       topic,
@@ -63,7 +63,11 @@ func (k *KafkaHelper) Subscribe(topic string, handler func(msg []byte)) error {
 					continue
 				}
 				log.Printf("message received: %s", string(msg.Value))
-				handler(msg.Value)
+				err = handler(msg.Value)
+				if err != nil {
+					errs = append(errs, err)
+					log.Printf("client unable to process message: %v", err)
+				}
 			}
 		}
 
