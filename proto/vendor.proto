@@ -1,0 +1,30 @@
+syntax = "proto3";
+
+package vendor_service;
+
+option go_package = "shared/proto/vendor_service;vendor_service";
+
+service VendorService {
+    rpc CreateVendor (CreateVendorRequest) returns (Vendor);
+}
+
+message CreateVendorRequest {
+    string email = 1;   
+    string name = 4;   
+    optional string phone = 2;  
+    int64 userId = 3;    
+}
+
+
+
+
+
+message Vendor {
+    int64 id = 1;
+    string phone = 2;  
+    int64 userId = 3;     
+    string email = 4;   
+    string name = 5;   
+    string created_at = 8;  
+    string updated_at = 9;  
+}

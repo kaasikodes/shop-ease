@@ -22,3 +22,5 @@ type StoreRepo interface {
 }
 
 // TODO: Create a SqlStoreRepo that implements the interface above
+
+// vendor(grpc) - > subscription (grpc)| -> payment (grpc)

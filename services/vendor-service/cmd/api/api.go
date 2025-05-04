@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/go-chi/chi"
+	grpc_server "github.com/kaasikodes/shop-ease/services/vendor-service/internal/grpc"
 	"github.com/kaasikodes/shop-ease/services/vendor-service/internal/orders"
 	"github.com/kaasikodes/shop-ease/services/vendor-service/internal/store"
 	"github.com/kaasikodes/shop-ease/shared/broker"
@@ -16,9 +17,10 @@ import (
 )
 
 type config struct {
-	addr string
-	db   dbConfig
-	env  string
+	addr     string
+	grpcAddr string
+	db       dbConfig
+	env      string
 }
 
 type dbConfig struct {
@@ -80,6 +82,11 @@ func (app *application) mount(reg *prometheus.Registry) http.Handler {
 			r.Post("/:id/ship/bulk", app.bulkShipOrderHandler)
 
 		})
+		r.Route("/seller", func(r chi.Router) {
+			r.Post("/", app.createSellerHandler)
+			r.Get("/:sellerId", app.GetSellerHandler)
+
+		})
 		r.Route("/store", func(r chi.Router) {
 			r.Post("/", app.createStoreHandler)
 			r.Get("/{storeId}/performance", app.getStorePerformanceHandler) //get performance score of the store: lets grade by the sold stock in a month/total stock in a month
@@ -109,10 +116,16 @@ func (app *application) run(mux http.Handler) error {
 		IdleTimeout:  time.Minute,
 	}
 
-	app.logger.Info("App running starting to run on .....", app.config.addr)
+	app.logger.Info("Api running starting to run on .....", app.config.addr)
 
 	err := server.ListenAndServe()
-	log.Println("App running stopping to run on .....", app.config.addr)
+
+	go func() {
+		app.logger.Info("Grpc server running in the background on .....", app.config.addr)
+		server := grpc_server.NewVendorGRPCServer(app.config.grpcAddr, app.logger)
+		server.Run() //has a graceful shutdown built in, consider revisting ...
+
+	}()
 
 	if err != nil {
 		return err

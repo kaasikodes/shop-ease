@@ -35,8 +35,18 @@ type Product struct {
 	Description string `json:"description"`
 	Common
 }
+type Vendor struct {
+	ID     int    `json:"id"`
+	UserId int    `json:"userId"`
+	Name   string `json:"name"`
+	Email  string `json:"email"`
+	Phone  string `json:"phone"`
+	Common
+}
 
 type Store struct {
+	ID          int    `json:"id"`
+	VendorId    int    `json:"vendorId"`
 	Name        string `json:"name" validate:"required,max=100"`
 	Description string `json:"description" validate:"required,max=100"`
 	Address     Address

@@ -1,0 +1,45 @@
+syntax = "proto3";
+
+package subscription;
+
+option go_package = "shared/proto/subscription;subscription";
+
+service SubscriptionService {
+    // Begin here -> create plan(will have an audit history to track modifications), subscribeVendor(planId, vendorId, userId)
+    // events  -> will be emitted to track the user activity/interactions per vendor e.g if a user has items that belongs to the vendor store in their order that will be recorded as a user.ordered_ordered_from_store interaction, if they add an item to their cart/wishlist user.showed_interest_in_item_from_store each of this will have a timestamp, now they will be a formula that will be dynamically calculated everytime a request is made to the VerifyVendorSubscriptionStatus checking against current subscription plan so once the subscription limit is reached it will return {isValid: false, message: "Subscription Limit has been exceeded" | "Subscription has expired for this month ..."}, if subscription limit has been exceeded it will updated (limit_exceeded_at) for the subscription and an email will be sent to the user, also subsequent checks will first check this before proceeding to calculate so it has to only send the mail the first time it notices the issue, notify when they have reached 3/4 of their user limit. The check should be against all plans of the vendor that are not expired or limit_exceeded so can aggregrate and decide what to permit - in the event of upgrades, (no subscription cancellations?)
+    rpc CreateVendorSubscription(CreateVendorSubscriptionRequest) returns (VendorSubscription);
+    rpc MarkVendorSubscriptionAsPaid(MarkVendorSubscriptionAsPaidRequest) returns (VendorSubscription);
+    rpc VerifyVendorSubscriptionStatus(VerifyVendorSubscriptionStatusRequest) returns (VerifyVendorSubscriptionStatusResponse);
+}
+
+message MarkVendorSubscriptionAsPaidRequest {
+    
+    int64 transactionId = 1;    
+}
+message VerifyVendorSubscriptionStatusResponse {
+    bool isValid = 3;  
+    string message = 4;  
+}
+message VerifyVendorSubscriptionStatusRequest {
+    int64 vendorId = 3;    
+}
+message CreateVendorSubscriptionRequest {
+    int64 vendorId = 3;    
+    int64 planId = 4;    
+}
+
+
+
+
+
+message VendorSubscription {
+    int64 id = 1;
+    int64 planId = 2;     
+    int64 vendorId = 3;     
+    string expires_at = 4;   
+    string limit_exceeded_at = 5;   
+    string created_at = 6;  
+    string updated_at = 7;  
+    bool hasPaid = 8;  
+    string paid_at = 9;  
+}

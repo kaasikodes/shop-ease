@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/kaasikodes/shop-ease/services/vendor-service/pkg/types"
@@ -35,6 +36,7 @@ func (app *application) createStoreHandler(w http.ResponseWriter, r *http.Reques
 	span.SetAttributes(
 		attribute.String("name", payload.Name),
 		attribute.String("description", payload.Description),
+		attribute.String("vendorId", fmt.Sprint(payload.VendorId)),
 		attribute.String("account.bank", payload.Account.Bank),
 		attribute.String("account.swiftCode", payload.Account.SwiftCode),
 		attribute.String("account.number", payload.Account.Number),
