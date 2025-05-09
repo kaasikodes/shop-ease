@@ -1,21 +1,23 @@
 package types
 
-import "time"
+import (
+	"time"
+
+	"github.com/kaasikodes/shop-ease/shared/utils"
+)
 
 type Common struct {
 	CreatedAt time.Time `json:"createdAt"`
 	UpdatedAt time.Time `json:"updatedAt"`
 }
-type PaginationPayload struct {
-	Limit  int `json:"limit"`
-	Offset int `json:"offset"`
-}
+type PaginationPayload = utils.PaginationPayload
 
 type ProductFilter struct {
 	StoreId int `json:"storeId"`
 }
 type InventoryFilter struct {
 	ProductId int `json:"productId"`
+	StoreId   int `json:"storeId"`
 }
 type OrderFilter struct {
 	ProductId int `json:"productId"`

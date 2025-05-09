@@ -1,6 +1,9 @@
 package store
 
-import "github.com/kaasikodes/shop-ease/services/vendor-service/pkg/types"
+import (
+	"github.com/kaasikodes/shop-ease/services/vendor-service/pkg/types"
+	"github.com/kaasikodes/shop-ease/shared/utils"
+)
 
 type StoreRepo interface {
 	// create store
@@ -10,7 +13,7 @@ type StoreRepo interface {
 	// Get store by Id
 	GetStoreById(id int64) (*Store, error)
 	// Get products (allow for filter by storeId)
-	GetProducts(pagination *types.PaginationPayload, filter *types.ProductFilter) (result []types.Product, total int, err error)
+	GetProducts(pagination *utils.PaginationPayload, filter *types.ProductFilter) (result []types.Product, total int, err error)
 	// Add inventory in bulk
 	BulkAddInventory(payload []Inventory) error
 	// Update inventory
@@ -18,7 +21,7 @@ type StoreRepo interface {
 	// delete inventory
 	DeleteInventory(id int64) (*Inventory, error)
 	// Get Inventories
-	GetInventories(pagination *types.PaginationPayload, filter *types.InventoryFilter) (result []Inventory, total int, err error)
+	GetInventories(pagination *utils.PaginationPayload, filter *types.InventoryFilter) (result []Inventory, total int, err error)
 }
 
 // TODO: Create a SqlStoreRepo that implements the interface above

@@ -8,6 +8,7 @@ import (
 	"github.com/go-chi/chi"
 	grpc_server "github.com/kaasikodes/shop-ease/services/vendor-service/internal/grpc"
 	"github.com/kaasikodes/shop-ease/services/vendor-service/internal/orders"
+	"github.com/kaasikodes/shop-ease/services/vendor-service/internal/seller"
 	"github.com/kaasikodes/shop-ease/services/vendor-service/internal/store"
 	"github.com/kaasikodes/shop-ease/shared/broker"
 	"github.com/kaasikodes/shop-ease/shared/logger"
@@ -41,6 +42,7 @@ type application struct {
 	store struct {
 		store  store.StoreRepo
 		orders orders.OrderRepo
+		seller seller.SellerRepo
 	}
 }
 
@@ -83,21 +85,21 @@ func (app *application) mount(reg *prometheus.Registry) http.Handler {
 
 		})
 		r.Route("/seller", func(r chi.Router) {
-			r.Post("/", app.createSellerHandler)
-			r.Get("/:sellerId", app.GetSellerHandler)
+			r.Get("/:sellerId", app.getSellerHandler)
 
 		})
 		r.Route("/store", func(r chi.Router) {
 			r.Post("/", app.createStoreHandler)
-			r.Get("/{storeId}/performance", app.getStorePerformanceHandler) //get performance score of the store: lets grade by the sold stock in a month/total stock in a month
-			r.Patch("/{storeId}", app.updateStoreHandler)
-			r.Get("/{storeId}", app.getStoreHandler)
-			r.Get("/{storeId}/products", app.getProductsHandler)                       //products in the store
-			r.Get("/{storeId}/inventory", app.getInventoriesHandler)                   //inventories in the store
-			r.Post("/{storeId}/inventory/bulk", app.bulkAddInventoryHandler)           // add a multitude of product inventories
-			r.Post("/{storeId}/inventory/", app.addInventoryHandler)                   //add inventory for a single product
-			r.Put("/{storeId}/inventory/{inventoryId}", app.updateInventoryHandler)    //update inventory for a single product, audit
-			r.Delete("/{storeId}/inventory/{inventoryId}", app.deleteInventoryHandler) //delete inventory for a single product, only if not been used - update audit
+			r.Patch("/:storeId", app.updateStoreHandler)
+			r.Get("/:storeId", app.getStoreHandler)
+			r.Get("/:storeId/products", app.getProductsHandler)                      //products in the store
+			r.Get("/:storeId/inventory", app.getInventoriesHandler)                  //inventories in the store
+			r.Post("/:storeId/inventory/bulk", app.bulkAddInventoryHandler)          // add a multitude of product inventories
+			r.Post("/:storeId/inventory/", app.addInventoryHandler)                  //add inventory for a single product
+			r.Put("/:storeId/inventory/:inventoryId", app.updateInventoryHandler)    //update inventory for a single product, audit
+			r.Delete("/:storeId/inventory/:inventoryId", app.deleteInventoryHandler) //delete inventory for a single product, only if not been used - update audit
+
+			// TODO: r.Get("/{storeId}/performance", app.getStorePerformanceHandler) //get performance score of the store: lets grade by the sold stock in a month/total stock in a month -> would need to communicate with order service or local order repo if exists the former is better.
 
 		})
 

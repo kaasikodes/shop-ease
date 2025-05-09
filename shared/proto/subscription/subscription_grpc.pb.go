@@ -20,6 +20,7 @@ const _ = grpc.SupportPackageIsVersion9
 
 const (
 	SubscriptionService_CreateVendorSubscription_FullMethodName       = "/subscription.SubscriptionService/CreateVendorSubscription"
+	SubscriptionService_MarkVendorSubscriptionAsPaid_FullMethodName   = "/subscription.SubscriptionService/MarkVendorSubscriptionAsPaid"
 	SubscriptionService_VerifyVendorSubscriptionStatus_FullMethodName = "/subscription.SubscriptionService/VerifyVendorSubscriptionStatus"
 )
 
@@ -30,6 +31,7 @@ type SubscriptionServiceClient interface {
 	// Begin here -> create plan(will have an audit history to track modifications), subscribeVendor(planId, vendorId, userId)
 	// events  -> will be emitted to track the user activity/interactions per vendor e.g if a user has items that belongs to the vendor store in their order that will be recorded as a user.ordered_ordered_from_store interaction, if they add an item to their cart/wishlist user.showed_interest_in_item_from_store each of this will have a timestamp, now they will be a formula that will be dynamically calculated everytime a request is made to the VerifyVendorSubscriptionStatus checking against current subscription plan so once the subscription limit is reached it will return {isValid: false, message: "Subscription Limit has been exceeded" | "Subscription has expired for this month ..."}, if subscription limit has been exceeded it will updated (limit_exceeded_at) for the subscription and an email will be sent to the user, also subsequent checks will first check this before proceeding to calculate so it has to only send the mail the first time it notices the issue, notify when they have reached 3/4 of their user limit. The check should be against all plans of the vendor that are not expired or limit_exceeded so can aggregrate and decide what to permit - in the event of upgrades, (no subscription cancellations?)
 	CreateVendorSubscription(ctx context.Context, in *CreateVendorSubscriptionRequest, opts ...grpc.CallOption) (*VendorSubscription, error)
+	MarkVendorSubscriptionAsPaid(ctx context.Context, in *MarkVendorSubscriptionAsPaidRequest, opts ...grpc.CallOption) (*VendorSubscription, error)
 	VerifyVendorSubscriptionStatus(ctx context.Context, in *VerifyVendorSubscriptionStatusRequest, opts ...grpc.CallOption) (*VerifyVendorSubscriptionStatusResponse, error)
 }
 
@@ -45,6 +47,16 @@ func (c *subscriptionServiceClient) CreateVendorSubscription(ctx context.Context
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(VendorSubscription)
 	err := c.cc.Invoke(ctx, SubscriptionService_CreateVendorSubscription_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *subscriptionServiceClient) MarkVendorSubscriptionAsPaid(ctx context.Context, in *MarkVendorSubscriptionAsPaidRequest, opts ...grpc.CallOption) (*VendorSubscription, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(VendorSubscription)
+	err := c.cc.Invoke(ctx, SubscriptionService_MarkVendorSubscriptionAsPaid_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -68,6 +80,7 @@ type SubscriptionServiceServer interface {
 	// Begin here -> create plan(will have an audit history to track modifications), subscribeVendor(planId, vendorId, userId)
 	// events  -> will be emitted to track the user activity/interactions per vendor e.g if a user has items that belongs to the vendor store in their order that will be recorded as a user.ordered_ordered_from_store interaction, if they add an item to their cart/wishlist user.showed_interest_in_item_from_store each of this will have a timestamp, now they will be a formula that will be dynamically calculated everytime a request is made to the VerifyVendorSubscriptionStatus checking against current subscription plan so once the subscription limit is reached it will return {isValid: false, message: "Subscription Limit has been exceeded" | "Subscription has expired for this month ..."}, if subscription limit has been exceeded it will updated (limit_exceeded_at) for the subscription and an email will be sent to the user, also subsequent checks will first check this before proceeding to calculate so it has to only send the mail the first time it notices the issue, notify when they have reached 3/4 of their user limit. The check should be against all plans of the vendor that are not expired or limit_exceeded so can aggregrate and decide what to permit - in the event of upgrades, (no subscription cancellations?)
 	CreateVendorSubscription(context.Context, *CreateVendorSubscriptionRequest) (*VendorSubscription, error)
+	MarkVendorSubscriptionAsPaid(context.Context, *MarkVendorSubscriptionAsPaidRequest) (*VendorSubscription, error)
 	VerifyVendorSubscriptionStatus(context.Context, *VerifyVendorSubscriptionStatusRequest) (*VerifyVendorSubscriptionStatusResponse, error)
 	mustEmbedUnimplementedSubscriptionServiceServer()
 }
@@ -81,6 +94,9 @@ type UnimplementedSubscriptionServiceServer struct{}
 
 func (UnimplementedSubscriptionServiceServer) CreateVendorSubscription(context.Context, *CreateVendorSubscriptionRequest) (*VendorSubscription, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateVendorSubscription not implemented")
+}
+func (UnimplementedSubscriptionServiceServer) MarkVendorSubscriptionAsPaid(context.Context, *MarkVendorSubscriptionAsPaidRequest) (*VendorSubscription, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method MarkVendorSubscriptionAsPaid not implemented")
 }
 func (UnimplementedSubscriptionServiceServer) VerifyVendorSubscriptionStatus(context.Context, *VerifyVendorSubscriptionStatusRequest) (*VerifyVendorSubscriptionStatusResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method VerifyVendorSubscriptionStatus not implemented")
@@ -124,6 +140,24 @@ func _SubscriptionService_CreateVendorSubscription_Handler(srv interface{}, ctx 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _SubscriptionService_MarkVendorSubscriptionAsPaid_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MarkVendorSubscriptionAsPaidRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SubscriptionServiceServer).MarkVendorSubscriptionAsPaid(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: SubscriptionService_MarkVendorSubscriptionAsPaid_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SubscriptionServiceServer).MarkVendorSubscriptionAsPaid(ctx, req.(*MarkVendorSubscriptionAsPaidRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _SubscriptionService_VerifyVendorSubscriptionStatus_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(VerifyVendorSubscriptionStatusRequest)
 	if err := dec(in); err != nil {
@@ -152,6 +186,10 @@ var SubscriptionService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CreateVendorSubscription",
 			Handler:    _SubscriptionService_CreateVendorSubscription_Handler,
+		},
+		{
+			MethodName: "MarkVendorSubscriptionAsPaid",
+			Handler:    _SubscriptionService_MarkVendorSubscriptionAsPaid_Handler,
 		},
 		{
 			MethodName: "VerifyVendorSubscriptionStatus",

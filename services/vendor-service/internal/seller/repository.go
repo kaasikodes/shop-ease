@@ -5,6 +5,7 @@ import "database/sql"
 type SellerRepo interface {
 	// create vendor
 	CreateVendor(payload Seller) (*Seller, error)
+	GetVendor(sellerId int64) (*Seller, error)
 }
 
 type SqlSellerRepo struct {
