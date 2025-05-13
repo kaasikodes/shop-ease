@@ -24,3 +24,8 @@ go.work
 *.log
 .envrc
 ./bin
+# added
+./logs
+./tmp
+articles.md
+
