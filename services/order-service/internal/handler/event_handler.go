@@ -6,7 +6,8 @@ import (
 	"log"
 	"strings"
 
-	"github.com/kaasikodes/shop-ease/services/product-service/internal/repository"
+	"github.com/kaasikodes/shop-ease/services/order-service/internal/model"
+	"github.com/kaasikodes/shop-ease/services/order-service/internal/repository"
 	"github.com/kaasikodes/shop-ease/shared/events"
 )
 
@@ -14,19 +15,14 @@ type EventPayload struct {
 	Event string          `json:"event"`
 	Data  json.RawMessage `json:"data"`
 }
-type EventVendorUpdatedInventoryPayload struct {
-	InventoryId int `json:"inventoryId"`
-	VendorId    int `json:"vendorId"`
-	StoreId     int `json:"storeId"`
-	ProductId   int `json:"productId"`
-	Quantity    int `json:"quantity"`
-	metaData    map[string]string
+type EventVendorAcceptedOrderItemPayload struct {
+	OrderItemId int `json:"orderItemId"`
 }
 type EventHandler struct {
-	store repository.ProductRepo
+	store repository.OrderRepo
 }
 
-func InitEventHandler(store repository.ProductRepo) *EventHandler {
+func InitEventHandler(store repository.OrderRepo) *EventHandler {
 
 	return &EventHandler{
 		store,
@@ -44,7 +40,7 @@ func (p *EventHandler) HandleVendorEvents(msg []byte) error {
 
 	switch strings.ToLower(event.Event) {
 	case events.VendorAcceptedOrderItem:
-		return p.updateProductGlobalInventory(msg)
+		return p.vendorAccepetedOrderItem(msg)
 	default:
 		log.Printf("unhandled event type: %s", event.Event)
 
@@ -54,14 +50,14 @@ func (p *EventHandler) HandleVendorEvents(msg []byte) error {
 
 }
 
-func (p *EventHandler) updateProductGlobalInventory(msg []byte) error {
-	var payload EventVendorUpdatedInventoryPayload
+func (p *EventHandler) vendorAccepetedOrderItem(msg []byte) error {
+	var payload EventVendorAcceptedOrderItemPayload
 	if err := json.Unmarshal(msg, &payload); err != nil {
 		log.Printf("an error occured while unmarshaling the event payload: %v", err)
 		return err
 	}
 	ctx := context.Background()
-	err := p.store.UpdateProductInventory(ctx, payload.InventoryId, payload.StoreId, payload.ProductId, payload.Quantity, &payload.metaData)
+	err := p.store.UpdateOrderItemStatus(ctx, payload.OrderItemId, model.ProcessingOrderStatus)
 	return err
 
 }

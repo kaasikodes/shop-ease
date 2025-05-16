@@ -1,0 +1,73 @@
+syntax = "proto3";
+
+package product;
+
+option go_package = "shared/proto/product;product";
+
+// ---- Service ----
+
+service ProductService {
+  rpc GetDiscounts(GetDiscountsRequest) returns (DiscountList);
+  rpc CreateDiscount(CreateDiscountRequest) returns (Discount);
+}
+
+// ---- Requests ----
+
+message GetDiscountsRequest {
+  Pagination pagination = 1;
+  DiscountFilter filter = 2;
+}
+
+message CreateDiscountRequest {
+  string valueType = 2;
+  string effectiveAt = 3; // ISO 8601 format
+  string expiresAt = 4;   // Optional, ISO 8601
+  string paidBy = 5;
+  DiscountApplicability applicableTo = 6;
+  string name = 7;
+  string description = 8;
+  int32 value =9;
+}
+
+// ---- Core Messages ----
+
+message Pagination {
+  int64 limit = 1;
+  int64 offset = 2;
+}
+
+message DiscountFilter {
+  string expiresAt = 1; // ISO 8601 string, optional
+  DiscountApplicability applicableTo = 2;
+}
+
+message DiscountList {
+  repeated Discount discounts = 1;
+  int64 total = 2;
+}
+
+message Discount {
+  int64 id = 1;
+  int32 value = 2;
+  string valueType = 3;
+  string effectiveAt = 4;
+  string expiresAt = 5;
+  string paidBy = 6;
+  DiscountApplicability applicableTo = 7;
+
+  // Descriptive model fields
+  string name = 8;
+  string description = 9;
+
+  // Common fields
+  string createdAt = 10;
+  string updatedAt = 11;
+}
+
+message DiscountApplicability {
+  repeated int64 productIds = 1;
+  repeated int64 storeProductIds = 2;
+  repeated int64 storeProductInventoryIds = 3;
+
+
+}

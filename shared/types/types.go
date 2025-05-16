@@ -44,9 +44,9 @@ var (
 )
 
 type DiscountApplicability struct {
-	ProductIds               []int
-	StoreProductIds          []int
-	StoreProductInventoryIds []int
+	ProductIds               []int64
+	StoreProductIds          []int64
+	StoreProductInventoryIds []int64
 }
 type Discount struct {
 	Id           int                   `json:"id"`

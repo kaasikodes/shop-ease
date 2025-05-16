@@ -3,6 +3,9 @@ package utils
 import (
 	"net/http"
 	"strconv"
+	"time"
+
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 type PaginationPayload struct {
@@ -23,4 +26,11 @@ func GetPaginationFromQuery(r *http.Request) *PaginationPayload {
 		Offset: offset,
 		Limit:  limit,
 	}
+}
+
+func ToProtoTimestamp(t *time.Time) *timestamppb.Timestamp {
+	if t == nil {
+		return nil
+	}
+	return timestamppb.New(*t)
 }

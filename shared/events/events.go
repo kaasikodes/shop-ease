@@ -15,6 +15,9 @@ var (
 	// payment sends
 	VendorSubscriptionPaymnentMade = "payment.vendor_subcription_paid_for"
 	OrderPaymnentMade              = "payment.order_paid_for"
+	// vendor
+	VendorUpdatedInventory  = "vendor.updated_inventory"
+	VendorAcceptedOrderItem = "vendor.accepted_order_item"
 )
 
 const (

@@ -12,9 +12,9 @@ type SqlSellerRepo struct {
 	db *sql.DB
 }
 
-func (r *SqlSellerRepo) CreateVendor(payload Seller) (*Seller, error)
-
 func NewSqlSellerRepo(db *sql.DB) *SqlSellerRepo {
 	return &SqlSellerRepo{db}
 
 }
+func (r *SqlSellerRepo) CreateVendor(payload Seller) (*Seller, error)
+func (r *SqlSellerRepo) GetVendor(sellerId int64) (*Seller, error)

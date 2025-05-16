@@ -1,11 +1,11 @@
-package grpc_server
+package main
 
 import (
 	"fmt"
 	"net"
 
-	"github.com/kaasikodes/shop-ease/services/notification-service/config"
-	"github.com/kaasikodes/shop-ease/services/vendor-service/internal/seller"
+	"github.com/kaasikodes/shop-ease/services/product-service/internal/handler"
+	"github.com/kaasikodes/shop-ease/services/product-service/internal/repository"
 	"github.com/kaasikodes/shop-ease/shared/database"
 	"github.com/kaasikodes/shop-ease/shared/logger"
 	"github.com/kaasikodes/shop-ease/shared/observability"
@@ -16,18 +16,17 @@ import (
 
 type gRPCServer struct {
 	addr   string
+	config config
 	logger logger.Logger
 }
 
-func NewVendorGRPCServer(addr string, logger logger.Logger) *gRPCServer {
-	logger.Info("Initializing Grpc Server .....")
-	return &gRPCServer{addr, logger}
+func NewProductGRPCServer(addr string, config config, logger logger.Logger) *gRPCServer {
+	logger.Info("addr for product grpc server", addr)
+	return &gRPCServer{addr, config, logger}
 
 }
 
 func (s *gRPCServer) Run() error {
-
-	cfg := config.ServiceConfig
 
 	lis, err := net.Listen("tcp", s.addr)
 	if err != nil {
@@ -35,23 +34,21 @@ func (s *gRPCServer) Run() error {
 	}
 
 	grpcServer := grpc.NewServer(grpc.UnaryInterceptor(otelgrpc.UnaryServerInterceptor()))
-	defer grpcServer.GracefulStop()
-	db, err := database.NewSqlDB(cfg.Db.Addr, cfg.Db.MaxOpenConns, cfg.Db.MaxIdleConns, cfg.Db.MaxIdleTime)
+	db, err := database.NewSqlDB(s.config.db.addr, s.config.db.maxOpenConns, s.config.db.maxOpenConns, s.config.db.maxIdleTime)
 	if err != nil {
 		return err
 	}
 	defer db.Close()
 
 	// tracer
-	shutdown := observability.InitTracer("vendor-service")
+	store := repository.NewPostgresProductRepo(db)
+	shutdown := observability.InitTracer("notification-service")
 	defer shutdown()
 
 	trace := otel.Tracer("app.notification/trace")
-	store := Store{
-		seller: seller.NewSqlSellerRepo(db),
-	}
-	NewGRPCHandler(grpcServer, store, trace, s.logger)
-	s.logger.Info("The Vendor GRPC SERVER IS UP .....")
+
+	handler.NewProductGrpcHandler(grpcServer, store, trace, s.logger)
+	s.logger.Info("The GRPC SERVER IS UP >>>>>>")
 
 	return grpcServer.Serve(lis)
 
