@@ -5,4 +5,4 @@ echo "starts generating code .."
 protoc --go_out=. --go-grpc_out=. ./proto/notification.proto
 protoc --go_out=. --go-grpc_out=. ./proto/vendor.proto
 protoc --go_out=. --go-grpc_out=. ./proto/subscription.proto
-# protoc --go_out=. --go-grpc_out=. ./proto/payment.proto
+protoc --go_out=. --go-grpc_out=. ./proto/payment.proto

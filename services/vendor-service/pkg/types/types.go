@@ -3,6 +3,7 @@ package types
 import (
 	"time"
 
+	"github.com/kaasikodes/shop-ease/shared/types"
 	"github.com/kaasikodes/shop-ease/shared/utils"
 )
 
@@ -32,9 +33,10 @@ type Order struct {
 	Common
 }
 type Product struct {
-	ID          int    `json:"id"`
-	Name        string `json:"name"`
-	Description string `json:"description"`
+	ID          int         `json:"id"`
+	Name        string      `json:"name"`
+	Description string      `json:"description"`
+	Price       types.Price `json:"price"`
 	Common
 }
 type Vendor struct {

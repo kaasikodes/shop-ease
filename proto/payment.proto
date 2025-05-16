@@ -1,0 +1,55 @@
+syntax = "proto3";
+
+package payment;
+
+option go_package = "shared/proto/payment;payment";
+
+// Payment service definition
+service PaymentService {
+  // Get all transactions matching a filter
+  rpc GetTransactions(GetTransactionsRequest) returns (TransactionList);
+
+  // Get a transaction by its ID
+  rpc GetTransactionById(GetByIdRequest) returns (Transaction);
+}
+
+// Request message combining pagination and filters
+message GetTransactionsRequest {
+  Pagination pagination = 1;
+  TransactionFilter filter = 2;
+}
+
+// Pagination parameters
+message Pagination {
+  int64 limit = 1;
+  int64 offset = 2;
+}
+
+// Filter for retrieving transactions
+message TransactionFilter {
+  int64 entityId = 1;
+  string status = 2;
+  string entityPaymentType = 3;
+  string provider = 4;
+}
+
+// Single transaction data
+message Transaction {
+  int64 id = 1;
+  int64 entityId = 2;
+  string status = 3;
+  string entityPaymentType = 4;
+  string provider = 5;
+  map<string, string> metaData = 6;
+}
+
+// Request for getting transaction by ID
+message GetByIdRequest {
+  int64 transactionId = 1;
+}
+
+// List of transactions
+message TransactionList {
+  repeated Transaction transactions = 1;
+  int64 total = 2;
+}

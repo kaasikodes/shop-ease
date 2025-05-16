@@ -3,7 +3,7 @@ package orders
 import (
 	"github.com/kaasikodes/shop-ease/services/vendor-service/internal/products"
 	"github.com/kaasikodes/shop-ease/services/vendor-service/internal/store"
-	"github.com/kaasikodes/shop-ease/services/vendor-service/pkg/types"
+	"github.com/kaasikodes/shop-ease/shared/types"
 )
 
 type OrderStatus string
@@ -33,5 +33,6 @@ type Order struct {
 	FulfillingInventoryId int               `json:"fulfillingInventoryId"`
 	FulfillingInventory   *store.Inventory  `json:"fulfillingInventory"`
 	Product               *products.Product `json:"product"`
+	Sharing               types.SharingFormula
 	types.Common
 }
