@@ -34,3 +34,13 @@ func ToProtoTimestamp(t *time.Time) *timestamppb.Timestamp {
 	}
 	return timestamppb.New(*t)
 }
+
+// ParseInt parses a string into an int.
+// Returns 0 if parsing fails.
+func ParseInt(s string) int {
+	i, err := strconv.Atoi(s)
+	if err != nil {
+		return 0
+	}
+	return i
+}
