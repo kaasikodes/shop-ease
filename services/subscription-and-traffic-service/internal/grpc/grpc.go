@@ -36,7 +36,7 @@ func (s *gRPCServer) Run() error {
 
 	grpcServer := grpc.NewServer(grpc.UnaryInterceptor(otelgrpc.UnaryServerInterceptor()))
 	defer grpcServer.GracefulStop()
-	db, err := database.NewSqlDB(cfg.Db.Addr, cfg.Db.MaxOpenConns, cfg.Db.MaxIdleConns, cfg.Db.MaxIdleTime)
+	db, err := database.NewMySqlDB(cfg.Db.Addr, cfg.Db.MaxOpenConns, cfg.Db.MaxIdleConns, cfg.Db.MaxIdleTime)
 	if err != nil {
 		return err
 	}

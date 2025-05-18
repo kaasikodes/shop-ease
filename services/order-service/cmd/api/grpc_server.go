@@ -34,7 +34,7 @@ func (s *gRPCServer) Run() error {
 	}
 
 	grpcServer := grpc.NewServer(grpc.UnaryInterceptor(otelgrpc.UnaryServerInterceptor()))
-	db, err := database.NewSqlDB(s.config.db.addr, s.config.db.maxOpenConns, s.config.db.maxOpenConns, s.config.db.maxIdleTime)
+	db, err := database.NewMySqlDB(s.config.db.addr, s.config.db.maxOpenConns, s.config.db.maxOpenConns, s.config.db.maxIdleTime)
 	if err != nil {
 		return err
 	}

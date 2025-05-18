@@ -366,7 +366,7 @@ func (app *application) addInventoryHandler(w http.ResponseWriter, r *http.Reque
 
 	span.SetAttributes(
 		attribute.Int("productId", payload.ProductId),
-		attribute.Int("unitPrice", payload.UnitPrice),
+		attribute.Int("unitPrice", *payload.UnitCostPrice),
 		attribute.Int("quantity", payload.Quantity),
 		attribute.Int("storeId", storeId),
 	)
@@ -425,7 +425,7 @@ func (app *application) updateInventoryHandler(w http.ResponseWriter, r *http.Re
 
 	span.SetAttributes(
 		attribute.Int("productId", payload.ProductId),
-		attribute.Int("unitPrice", payload.UnitPrice),
+		attribute.Int("unitPrice", *payload.UnitCostPrice),
 		attribute.Int("quantity", payload.Quantity),
 		attribute.Int("storeId", storeId),
 	)
@@ -482,7 +482,7 @@ func (app *application) deleteInventoryHandler(w http.ResponseWriter, r *http.Re
 
 	span.SetAttributes(
 		attribute.Int("productId", payload.ProductId),
-		attribute.Int("unitPrice", payload.UnitPrice),
+		attribute.Int("unitPrice", *payload.UnitCostPrice),
 		attribute.Int("quantity", payload.Quantity),
 		attribute.Int("storeId", storeId),
 	)

@@ -1,0 +1,10 @@
+#!/usr/bin/bash
+
+
+docker run --name local-postgres \
+  -e POSTGRES_USER=admin \
+  -e POSTGRES_PASSWORD=cdd2de7b33741485957475bc \
+  -e POSTGRES_DB=postgres \
+  -v pgdata:/var/lib/postgresql/data \
+  -p 5432:5432 \
+  -d postgres:15

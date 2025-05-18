@@ -14,17 +14,17 @@ import (
 )
 
 var version = "0.0.0"
-var serviceIdentifier = "payment_service"
+var serviceIdentifier = "order_service"
 
 func main() {
 
-	shutdown := observability.InitTracer("product-service")
+	shutdown := observability.InitTracer("order-service")
 
 	defer shutdown()
 
 	tr := otel.Tracer("example.com/trace")
 	logCfg := logger.LogConfig{
-		LogFilePath:       "../../logs/product-service.log",
+		LogFilePath:       "../../logs/order-service.log",
 		Format:            logger.DefaultLogFormat,
 		PrimaryIdentifier: serviceIdentifier,
 	}
@@ -41,7 +41,7 @@ func main() {
 			maxIdleTime:  env.GetString("DB_MAX_IDLE_TIME", "15m"),
 		},
 	}
-	db, err := database.NewSqlDB(cfg.db.addr, cfg.db.maxOpenConns, cfg.db.maxOpenConns, cfg.db.maxIdleTime)
+	db, err := database.NewPostgresSqlDB(cfg.db.addr, cfg.db.maxOpenConns, cfg.db.maxOpenConns, cfg.db.maxIdleTime)
 	if err != nil {
 		logger.Fatal(err)
 	}

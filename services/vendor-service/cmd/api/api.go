@@ -59,29 +59,29 @@ func (app *application) mount(reg *prometheus.Registry) http.Handler {
 
 	})
 	r.Route("/v1", func(r chi.Router) {
-		r.Route("/analytics", func(r chi.Router) {
+		// r.Route("/analytics", func(r chi.Router) {
 
-			r.Get("/sales", app.salesAnalyticsHandler)         //sales report will have month filters
-			r.Get("/inventory", app.inventoryAnalyticsHandler) //inventory report what items were stocked, returned ordered in a single order
-		})
-		r.Route("/returns", func(r chi.Router) {
-			r.Get("/", app.getReturnsHandler) //get a list of orders that the vendor is part of
-			r.Get("/:id", app.getReturnsByIdHandler)
-			r.Post("/:id/approve", app.acceptReturnHandler)
-			r.Post("/:id/reject", app.rejectReturnHandler)
-			r.Post("/:id/receive", app.rejectReturnHandler)
+		// 	r.Get("/sales", app.salesAnalyticsHandler)         //sales report will have month filters
+		// 	r.Get("/inventory", app.inventoryAnalyticsHandler) //inventory report what items were stocked, returned ordered in a single order
+		// })
+		// r.Route("/returns", func(r chi.Router) {
+		// 	r.Get("/", app.getReturnsHandler) //get a list of orders that the vendor is part of
+		// 	r.Get("/:id", app.getReturnsByIdHandler)
+		// 	r.Post("/:id/approve", app.acceptReturnHandler)
+		// 	r.Post("/:id/reject", app.rejectReturnHandler)
+		// 	r.Post("/:id/receive", app.rejectReturnHandler)
 
-		})
+		// })
 		r.Route("/orders", func(r chi.Router) {
-			r.Get("/", app.getOrdersHandler)       //get a list of orders that the vendor is part of
-			r.Get("/:id", app.getOrderByIdHandler) //get a list of items in an order (can filter by order they belong to ) - shows the status(pending,accepted/rejected/processed, shipped, delivered, fulfilled, returned_by_user) of each item
-			r.Post("/:id/accept", app.acceptOrderHandler)
-			r.Post("/:id/reject", app.rejectOrderHandler)
-			r.Post("/:id/ship", app.shipOrderHandler)
-			r.Post("/:id/reject/bulk", app.bulkRejectOrderHandler)
-			r.Post("/:id/accept/bulk", app.bulkAcceptOrderHandler)
-			r.Post("/:id/reject/bulk", app.bulkRejectOrderHandler)
-			r.Post("/:id/ship/bulk", app.bulkShipOrderHandler)
+			r.Get("/", app.getOrdersHandler) //get a list of orders that the vendor is part of
+			// r.Get("/:id", app.getOrderByIdHandler) //get a list of items in an order (can filter by order they belong to ) - shows the status(pending,accepted/rejected/processed, shipped, delivered, fulfilled, returned_by_user) of each item
+			// r.Post("/:id/accept", app.acceptOrderHandler)
+			// r.Post("/:id/reject", app.rejectOrderHandler)
+			// r.Post("/:id/ship", app.shipOrderHandler)
+			// r.Post("/:id/reject/bulk", app.bulkRejectOrderHandler)
+			// r.Post("/:id/accept/bulk", app.bulkAcceptOrderHandler)
+			// r.Post("/:id/reject/bulk", app.bulkRejectOrderHandler)
+			// r.Post("/:id/ship/bulk", app.bulkShipOrderHandler)
 
 		})
 		r.Route("/seller", func(r chi.Router) {

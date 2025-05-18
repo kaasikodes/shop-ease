@@ -1,5 +1,42 @@
 # Ecommerce Api
 
+Hello
+
+## About
+
+## Archicture
+
+Diagram, and then discuss the diagram, make reference to article
+
+## Services
+
+## Prerequisites/Tools
+
+_Put in link to resources that will help the users setup_
+
+- Docker
+- .envrc
+- Makefile
+- proto
+- go
+- air
+
+## Gettin Started
+
+- commands/scripts
+
+## Folder Structure
+
+Discuss each folder briefly, talk about it been a mono repo, why stucture like this ..
+
+## Articles published on the basis of article
+
+Will help to gain insights into architectural decisions
+
+---
+
+##Old
+
 Each service has its own dedicated database to ensure scalability and minimal coupling. The structure of the project is shown below:
 
 backend/

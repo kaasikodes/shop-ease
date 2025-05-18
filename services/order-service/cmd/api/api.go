@@ -53,10 +53,10 @@ func (app *application) mount(reg *prometheus.Registry) http.Handler {
 	r.Route("/v1", func(r chi.Router) {
 		r.Route("/order", func(r chi.Router) {
 			r.Get("/", app.getOrdersHandler)
-			r.Get("/:orderId", app.getOrderByIdHandler)
-			r.Patch("/:orderId/change-status", app.changeOrderStatusHandler)
+			r.Get("/{orderId}", app.getOrderByIdHandler)
+			r.Patch("/{orderId}/change-status", app.changeOrderStatusHandler)
 			r.Post("/", app.createOrderHandler)
-			r.Patch("/item/:orderItemId/change-status", app.changeOrderItemStatusHandler)
+			r.Patch("/item/{orderItemId}/change-status", app.changeOrderItemStatusHandler)
 
 		})
 

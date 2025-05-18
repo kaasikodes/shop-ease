@@ -11,7 +11,7 @@ import (
 	"go.opentelemetry.io/otel/codes"
 )
 
-type SaveStorePayload = types.Store
+// type SaveStorePayload = types.Store
 
 func (app *application) getOrdersHandler(w http.ResponseWriter, r *http.Request) {
 

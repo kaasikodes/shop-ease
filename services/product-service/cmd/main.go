@@ -41,7 +41,7 @@ func main() {
 			maxIdleTime:  env.GetString("DB_MAX_IDLE_TIME", "15m"),
 		},
 	}
-	db, err := database.NewSqlDB(cfg.db.addr, cfg.db.maxOpenConns, cfg.db.maxOpenConns, cfg.db.maxIdleTime)
+	db, err := database.NewMySqlDB(cfg.db.addr, cfg.db.maxOpenConns, cfg.db.maxOpenConns, cfg.db.maxIdleTime)
 	if err != nil {
 		logger.Fatal(err)
 	}

@@ -3,11 +3,11 @@ package main
 import (
 	grpc_client "github.com/kaasikodes/shop-ease/services/auth-service/cmd/grpc"
 	"github.com/kaasikodes/shop-ease/services/auth-service/internal/db"
-	"github.com/kaasikodes/shop-ease/services/auth-service/internal/env"
+	"github.com/kaasikodes/shop-ease/shared/env"
+
 	store "github.com/kaasikodes/shop-ease/services/auth-service/internal/store/sql-store"
 	"github.com/kaasikodes/shop-ease/shared/broker"
 	"github.com/kaasikodes/shop-ease/shared/events"
-	"github.com/kaasikodes/shop-ease/shared/kafka"
 	"github.com/kaasikodes/shop-ease/shared/logger"
 	"github.com/kaasikodes/shop-ease/shared/observability"
 	"github.com/kaasikodes/shop-ease/shared/proto/notification"
@@ -22,7 +22,6 @@ func main() {
 	shutdown := observability.InitTracer("auth-service")
 	// TODO: Create a auth topic, and also find out about the straming and the offset, refactor to compose kafka to the app as an queue system so you can switch between rabbitmq to kafka, then move to the consumers like notification
 	// Define the events that each service should emit - say for example auth.user.verrifed, auth.customer_created
-	kafka.InitKafkaWriter(":9092", "orders")
 
 	defer shutdown()
 

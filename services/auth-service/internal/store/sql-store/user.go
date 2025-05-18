@@ -3,7 +3,9 @@ package store
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
+	"log"
 	"strings"
 	"time"
 
@@ -188,7 +190,7 @@ func (u *SQLUserStore) Create(ctx context.Context, tx *sql.Tx, user *User, role 
 
 // Verifying a user
 func (u *SQLUserStore) Verify(ctx context.Context, tx *sql.Tx, user *User) error {
-	query := `UPDATE users SET isVerified = ? WHERE email = ?`
+	query := `UPDATE users SET isVerified = ? WHERE email = ? OR id = ?`
 
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
 	defer cancel()
@@ -205,7 +207,7 @@ func (u *SQLUserStore) Verify(ctx context.Context, tx *sql.Tx, user *User) error
 	}
 
 	// Execute update
-	result, err := tx.ExecContext(ctx, query, true, user.Email)
+	result, err := tx.ExecContext(ctx, query, true, user.Email, user.ID)
 	if err != nil {
 		return store.ErrVerifyUser
 	}
@@ -216,7 +218,7 @@ func (u *SQLUserStore) Verify(ctx context.Context, tx *sql.Tx, user *User) error
 		return err
 	}
 	if rowsAffected == 0 {
-		return store.ErrNotFound
+		return errors.New("no entity modified")
 	}
 
 	user.IsVerified = true
@@ -284,18 +286,20 @@ func (u *SQLUserStore) Update(ctx context.Context, user *User) (*User, error) {
 
 }
 func (u *SQLUserStore) GetByEmailOrId(ctx context.Context, user *User) (*User, error) {
-	queryU := `SELECT (id, email, name, isVerified) FROM users WHERE id = $1 OR email = $2`
+	queryU := `SELECT id, email, name, isVerified FROM users WHERE id = ? OR email = ?`
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
+	log.Println(user, "user 1 ...")
 	defer cancel()
 	err := u.db.QueryRowContext(ctx, queryU, user.ID, user.Email).Scan(&user.ID, &user.Email, &user.Name, &user.IsVerified)
 	if err != nil {
 		return nil, err
 	}
+	log.Println(user, "user 2 ...")
 	queryR := `
 		SELECT ur.roleId, r.name, ur.isActive 
 		FROM userRoles ur
 		JOIN roles r ON ur.roleId = r.id
-		WHERE ur.userId = $1
+		WHERE ur.userId = ?
 	`
 	rows, err := u.db.QueryContext(ctx, queryR, user.ID)
 	if err != nil {

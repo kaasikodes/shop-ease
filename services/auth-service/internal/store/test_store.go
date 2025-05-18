@@ -75,7 +75,7 @@ func (t *TokenStoreR) Create(context.Context, *sql.Tx, *Token) error {
 func (t *TokenStoreR) Remove(context.Context, *Token) error {
 	return nil
 }
-func (t *TokenStoreR) GetOne(ctx context.Context, token *Token) (*Token, error) {
+func (t *TokenStoreR) GetOne(ctx context.Context, value string, entityId int, tokenType TokenType) (*Token, error) {
 	return nil, nil
 }
 

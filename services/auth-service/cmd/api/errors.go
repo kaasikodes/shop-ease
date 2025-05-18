@@ -27,7 +27,7 @@ func (app *application) badRequestResponse(w http.ResponseWriter, r *http.Reques
 		errors = append(errors, err.Error())
 
 	}
-	writeJsonError(w, http.StatusBadRequest, "Validation Error", errors)
+	writeJsonError(w, http.StatusBadRequest, "Bad Request", errors)
 }
 
 func (app *application) conflictResponse(w http.ResponseWriter, r *http.Request, err error) {

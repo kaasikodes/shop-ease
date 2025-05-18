@@ -66,14 +66,15 @@ func (t *SQLTokenStore) Remove(ctx context.Context, token *Token) error {
 }
 
 // GetOne retrieves a token based on ID or entityId and tokenType
-func (t *SQLTokenStore) GetOne(ctx context.Context, token *Token) (*Token, error) {
+func (t *SQLTokenStore) GetOne(ctx context.Context, value string, entityId int, tokenType TokenType) (*Token, error) {
 	query := `
 		SELECT id, entityId, tokenType, value, expiresAt
 		FROM tokens
-		WHERE id = ? OR (entityId = ? AND tokenType = ?)
+		WHERE value = ? AND entityId = ? AND tokenType = ?
 		LIMIT 1
 	`
-	err := t.db.QueryRowContext(ctx, query, token.Id, token.EntityId, token.TokenType).
+	var token Token
+	err := t.db.QueryRowContext(ctx, query, value, entityId, tokenType).
 		Scan(&token.Id, &token.EntityId, &token.TokenType, &token.Value, &token.ExpiresAt)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -81,5 +82,5 @@ func (t *SQLTokenStore) GetOne(ctx context.Context, token *Token) (*Token, error
 		}
 		return nil, err
 	}
-	return token, nil
+	return &token, nil
 }

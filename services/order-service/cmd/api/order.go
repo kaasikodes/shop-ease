@@ -131,7 +131,7 @@ func (app *application) createOrderHandler(w http.ResponseWriter, r *http.Reques
 	defer span.End()
 
 	var body struct {
-		UserId int                               `json:"user_id"`
+		UserId int                               `json:"userId"`
 		Items  []repository.CreateOrderInputItem `json:"items"`
 	}
 

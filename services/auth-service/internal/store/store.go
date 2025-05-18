@@ -21,7 +21,7 @@ type Users interface {
 type Tokens interface {
 	Create(context.Context, *sql.Tx, *Token) error
 	Remove(context.Context, *Token) error
-	GetOne(ctx context.Context, token *Token) (*Token, error)
+	GetOne(ctx context.Context, value string, entityId int, tokenType TokenType) (*Token, error)
 }
 type Roles interface {
 	CreateDefaultRoles(ctx context.Context) ([]Role, error)
@@ -37,7 +37,7 @@ type Storage interface {
 
 var (
 	QueryTimeoutDuration = 4 * time.Second
-	ErrNotFound          = errors.New("entity does not exits")
+	ErrNotFound          = errors.New("entity does not exists")
 	ErrConflict          = errors.New("entity already exists")
 )
 
