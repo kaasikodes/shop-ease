@@ -58,7 +58,19 @@ func (app *application) loginHandler(w http.ResponseWriter, r *http.Request) {
 		app.badRequestResponse(w, r, err)
 		return
 	}
+	// check if passwords match
+	passwordsMatch := user.Password.Compare(payload.Password)
 
-	app.jsonResponse(w, http.StatusOK, "User logged in successfully!", user)
+	if !passwordsMatch {
+		err = errors.New("passwords do not match")
+		app.logger.WithContext(parentTraceCtx).Error("Verification Error", err)
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
+		app.badRequestResponse(w, r, err)
+		return
+
+	}
+
+	app.jsonResponse(w, http.StatusOK, "User logged in successfully!", map[string]any{"user": user, "accessToken": ""})
 
 }

@@ -190,7 +190,7 @@ func (u *SQLUserStore) Create(ctx context.Context, tx *sql.Tx, user *User, role 
 
 // Verifying a user
 func (u *SQLUserStore) Verify(ctx context.Context, tx *sql.Tx, user *User) error {
-	query := `UPDATE users SET isVerified = ? WHERE email = ? OR id = ?`
+	query := `UPDATE users SET isVerified = ?, verifiedAt = NOW() WHERE email = ? OR id = ?`
 
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
 	defer cancel()
@@ -286,11 +286,12 @@ func (u *SQLUserStore) Update(ctx context.Context, user *User) (*User, error) {
 
 }
 func (u *SQLUserStore) GetByEmailOrId(ctx context.Context, user *User) (*User, error) {
-	queryU := `SELECT id, email, name, isVerified FROM users WHERE id = ? OR email = ?`
+	var pwdHash string
+	queryU := `SELECT id, email, name, isVerified, password, verifiedAt FROM users WHERE id = ? OR email = ?`
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
 	log.Println(user, "user 1 ...")
 	defer cancel()
-	err := u.db.QueryRowContext(ctx, queryU, user.ID, user.Email).Scan(&user.ID, &user.Email, &user.Name, &user.IsVerified)
+	err := u.db.QueryRowContext(ctx, queryU, user.ID, user.Email).Scan(&user.ID, &user.Email, &user.Name, &user.IsVerified, &pwdHash, &user.VerifiedAt)
 	if err != nil {
 		return nil, err
 	}
@@ -316,6 +317,11 @@ func (u *SQLUserStore) GetByEmailOrId(ctx context.Context, user *User) (*User, e
 		user.Roles = append(user.Roles, role)
 
 	}
+	log.Println("PWD ________________________________________B4", string(user.Password.Hash))
+	// set password hash
+	user.Password.Hash = []byte(pwdHash)
+	log.Println("PWD ________________________________________AFTER", string(user.Password.Hash))
+
 	return user, nil
 }
 func (u *SQLUserStore) Get(ctx context.Context, pagination PaginationPayload, filter UserFilterQuery) ([]User, int, error) {

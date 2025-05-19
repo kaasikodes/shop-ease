@@ -76,6 +76,7 @@ These is important for any system and essential for microservices as this will a
 - Metrics
 
 ## Conclusion
+
 This is just an introduction to a couple of lectures we're will be discussing micro-services and system architecture, with the e-commerce project as a reference point. The relevant links will be shared and the repository shortly, still been worked(would like to make it as self-docmenting and explainatory as possible). Cheers and stay tuned for the next episode.
 
 ## Next Steps
@@ -132,3 +133,9 @@ Folders
 - Work on each service and their deployment
 
 # Infrastucture & Infrastructure Planning
+
+# Oauth Compliant Auth Service in Go
+
+## Other
+
+Let's focus on what value can I provide for you - from what has been presented so far it seems ....

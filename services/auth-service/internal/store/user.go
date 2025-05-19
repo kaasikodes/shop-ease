@@ -29,7 +29,7 @@ type User struct {
 }
 
 type password struct {
-	hash []byte
+	Hash []byte
 }
 
 func (p *password) Set(text string) error {
@@ -37,17 +37,17 @@ func (p *password) Set(text string) error {
 	if err != nil {
 		return err
 	}
-	p.hash = hash
+	p.Hash = hash
 	return nil
 
 }
 func (p *password) Compare(text string) bool {
-	err := bcrypt.CompareHashAndPassword(p.hash, []byte(text))
+	err := bcrypt.CompareHashAndPassword(p.Hash, []byte(text))
 	return err == nil
 
 }
 func (p *password) GetHash() []byte {
-	return p.hash
+	return p.Hash
 
 }
 
