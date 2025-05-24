@@ -1,11 +1,62 @@
 package main
 
 import (
+	"context"
+	"errors"
+	"fmt"
 	"net/http"
 	"regexp"
 	"strconv"
 	"time"
+
+	"github.com/kaasikodes/shop-ease/services/auth-service/internal/store"
+	"go.opentelemetry.io/otel/codes"
 )
+
+func (app *application) authMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx, span := app.trace.Start(r.Context(), "Auth middleware")
+		defer span.End()
+
+		// Step 1: Verify token
+		claims, err := app.jwt.ExtractAndVerifyToken(r)
+		if err != nil {
+			app.logger.WithContext(ctx).Error("JWT token error", err)
+			span.RecordError(err)
+			span.SetStatus(codes.Error, err.Error())
+			app.unauthorizedErrorResponse(w, r, fmt.Errorf("please provide a valid token: %w", err))
+			return
+		}
+
+		// Step 2: Retrieve user from DB
+		userID, err := strconv.Atoi(claims.UserID)
+		if err != nil {
+			app.logger.WithContext(ctx).Error("Invalid user ID in token", err)
+			app.unauthorizedErrorResponse(w, r, fmt.Errorf("invalid user ID in token"))
+			return
+		}
+
+		user, err := app.store.Users().GetByEmailOrId(ctx, &store.User{ID: userID})
+		if err != nil {
+			app.logger.WithContext(ctx).Error("User not found", err)
+			app.unauthorizedErrorResponse(w, r, fmt.Errorf("user not found"))
+			return
+		}
+
+		// Step 3: Check if verified
+		if !user.IsVerified {
+			app.badRequestResponse(w, r, errors.New("user is not verified"))
+			return
+		}
+
+		// Step 4: Add user and claims to context
+		ctx = context.WithValue(ctx, ContextKeyUser{}, user)
+		ctx = context.WithValue(ctx, ContextKeyClaims{}, claims)
+
+		// Step 5: Call next handler with the new context
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
+}
 
 func (app *application) metricsMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

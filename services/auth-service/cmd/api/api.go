@@ -6,8 +6,10 @@ import (
 	"time"
 
 	"github.com/go-chi/chi"
+	"github.com/kaasikodes/shop-ease/services/auth-service/internal/oauth/provider"
 	"github.com/kaasikodes/shop-ease/services/auth-service/internal/store"
 	"github.com/kaasikodes/shop-ease/shared/broker"
+	jwttoken "github.com/kaasikodes/shop-ease/shared/jwt_token"
 	"github.com/kaasikodes/shop-ease/shared/logger"
 	"github.com/kaasikodes/shop-ease/shared/proto/notification"
 	"github.com/prometheus/client_golang/prometheus"
@@ -51,6 +53,10 @@ type application struct {
 	logger  logger.Logger
 	// message broker
 	broker broker.MessageBroker
+	// oauth provider
+	oauthProviderRegistry map[provider.OauthProviderType]provider.OauthProvider
+	// jwt
+	jwt *jwttoken.JwtMaker
 }
 
 func (app *application) mount(reg *prometheus.Registry) http.Handler {
@@ -66,18 +72,25 @@ func (app *application) mount(reg *prometheus.Registry) http.Handler {
 	})
 	r.Route("/v1", func(r chi.Router) {
 		r.Route("/auth", func(r chi.Router) {
+			// TODO: add rate limiting for auth required endpoints to prevent abuse
 			r.Post("/register", app.registerHandler) // customer(happy path), vendor
 			r.Post("/login", app.loginHandler)
 			r.Post("/verify", app.verifyHandler)
 			r.Post("/forgot-password", app.forgotPasswordHandler)
 			r.Post("/reset-password", app.resetPasswordHandler)
-			// TODO: Add middleware here to check wether user is authenticated
+			// oauth providers
+			r.Route("/oauth", func(r chi.Router) {
+				r.Get("/github/login", app.githubOauthLoginHandler)
+				r.Get("/github/callback", app.githubOauthCallbackHandler)
+			})
+
 			r.Group(func(r chi.Router) {
+				r.Use(app.authMiddleware)
 				r.Get("/me", app.retriveAuthAccountHandler)
 			})
 		})
 
-		// They ought to be grpc endpoints that other services can call like
+		// There ought to be grpc endpoints that other services can call like
 		// isUserVerified : vendor
 		// listOfUsers with pagination params and all :
 		// getUserById : vendor

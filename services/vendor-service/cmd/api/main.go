@@ -3,8 +3,15 @@ package main
 import (
 	"github.com/kaasikodes/shop-ease/services/vendor-service/internal/products"
 	"github.com/kaasikodes/shop-ease/shared/broker"
+	"github.com/kaasikodes/shop-ease/shared/env"
 	"github.com/kaasikodes/shop-ease/shared/events"
+	jwttoken "github.com/kaasikodes/shop-ease/shared/jwt_token"
+	"github.com/kaasikodes/shop-ease/shared/logger"
+	"github.com/prometheus/client_golang/prometheus"
+	"go.opentelemetry.io/otel"
 )
+
+const serviceIdentifier = "vendor-service"
 
 // store = name, address, contact details - phone, email,vendor_id
 // sales = product_id, paid_at, cutomer_order_id, store_id, - Remove
@@ -22,6 +29,7 @@ import (
 const version = "0.0.0"
 
 func main() {
+	// background
 	productStore := products.NewInMemoryProductRepo()
 	productHandler := products.InitProductHandler(productStore)
 	broker := broker.NewKafkaHelper([]string{":9092"}, events.VendorTopic)
@@ -31,5 +39,30 @@ func main() {
 		broker.Subscribe(events.AuthTopic, productHandler.HandleAuthEvents)
 
 	}()
+
+	// main app - api
+
+	tr := otel.Tracer("example.com/trace")
+	// logger
+	logCfg := logger.LogConfig{
+		LogFilePath:       "../../logs/vendor-service.log",
+		Format:            logger.DefaultLogFormat,
+		PrimaryIdentifier: serviceIdentifier,
+	}
+	logger := logger.New(logCfg)
+	//  jwt
+	jwt := jwttoken.NewJwtMaker(env.GetString("JWT_SECRET", ""))
+	app := &application{
+		jwt:    jwt,
+		logger: logger,
+		trace:  tr,
+	}
+
+	// metrics
+	metricsReg := prometheus.NewRegistry()
+
+	mux := app.mount(metricsReg)
+
+	logger.Fatal(app.run(mux))
 
 }

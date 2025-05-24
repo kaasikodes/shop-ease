@@ -3,7 +3,9 @@ package main
 import (
 	grpc_client "github.com/kaasikodes/shop-ease/services/auth-service/cmd/grpc"
 	"github.com/kaasikodes/shop-ease/services/auth-service/internal/db"
+	"github.com/kaasikodes/shop-ease/services/auth-service/internal/oauth/provider"
 	"github.com/kaasikodes/shop-ease/shared/env"
+	jwttoken "github.com/kaasikodes/shop-ease/shared/jwt_token"
 
 	store "github.com/kaasikodes/shop-ease/services/auth-service/internal/store/sql-store"
 	"github.com/kaasikodes/shop-ease/shared/broker"
@@ -62,15 +64,23 @@ func main() {
 	metrics := NewMetrics(metricsReg)
 	broker := broker.NewKafkaHelper([]string{":9092"}, events.AuthTopic)
 	defer broker.Close()
+	// set up oauth providers
+	githubOauthProvider := provider.NewGithubOauthProvider(env.GetString("GITHUB_CLIENT_ID", ""), env.GetString("GITHUB_CLIENT_SECRET", ""), env.GetString("GITHUB_REDIRECT_URL", ""))
+	provider.OauthProviderRegistry = make(map[provider.OauthProviderType]provider.OauthProvider)
+	provider.OauthProviderRegistry[provider.OauthProviderTypeGithub] = githubOauthProvider
+	// set up jwt
+	jwt := jwttoken.NewJwtMaker(env.GetString("JWT_SECRET", ""))
 	var app = &application{
-		config:              cfg,
-		rateLimiter:         rateLimiterConfig{},
-		logger:              logger,
-		store:               store.NewSQLStorage(db),
-		notificationService: n,
-		metrics:             metrics,
-		trace:               tr,
-		broker:              broker,
+		config:                cfg,
+		rateLimiter:           rateLimiterConfig{},
+		logger:                logger,
+		store:                 store.NewSQLStorage(db),
+		notificationService:   n,
+		metrics:               metrics,
+		trace:                 tr,
+		broker:                broker,
+		oauthProviderRegistry: provider.OauthProviderRegistry,
+		jwt:                   jwt,
 	}
 	mux := app.mount(metricsReg)
 

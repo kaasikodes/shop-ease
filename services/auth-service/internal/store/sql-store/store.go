@@ -1,6 +1,7 @@
 package store
 
 import (
+	"context"
 	"database/sql"
 
 	"github.com/kaasikodes/shop-ease/services/auth-service/internal/store"
@@ -14,6 +15,10 @@ func NewSQLStorage(db *sql.DB) store.Storage {
 	return &SqlStorage{
 		db,
 	}
+
+}
+func (s *SqlStorage) BeginTx(ctx context.Context) (*sql.Tx, error) {
+	return s.db.BeginTx(ctx, nil)
 
 }
 func (s *SqlStorage) Users() store.Users {

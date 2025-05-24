@@ -72,7 +72,7 @@ func (app *application) registerHandler(w http.ResponseWriter, r *http.Request) 
 	switch payload.RoleId {
 	case store.CustomerID:
 		app.logger.Info("New Customer Registeration initiated ...")
-		user, verificationToken, err := app.registerCustomer(ctx, payload)
+		user, verificationToken, err := app.registerCustomer(ctx, payload, false)
 		if err != nil {
 			app.logger.WithContext(registerTraceCtx).Error("Error registering customer", err)
 			span.RecordError(err)
@@ -129,9 +129,10 @@ func (app *application) registerHandler(w http.ResponseWriter, r *http.Request) 
 	}
 
 }
-func (app *application) registerCustomer(ctx context.Context, payload RegisterUserPayload) (*store.User, *string, error) {
+func (app *application) registerCustomer(ctx context.Context, payload RegisterUserPayload, isVerifiedByOauth bool) (*store.User, *string, error) {
 	_, span := app.trace.Start(ctx, "register-customer")
 	defer span.End()
+	var plainToken string
 	// create user acc
 	user := &store.User{
 		Name:  payload.Name,
@@ -140,7 +141,40 @@ func (app *application) registerCustomer(ctx context.Context, payload RegisterUs
 	if err := user.Password.Set(payload.Password); err != nil {
 		return nil, nil, err
 	}
-	plainToken := uuid.New().String() //TODO: hash and save token, not just the plain token
+	if isVerifiedByOauth {
+
+		// Start a new transaction
+		tx, err := app.store.BeginTx(ctx)
+		if err != nil {
+			span.RecordError(err)
+			return nil, nil, err
+		}
+
+		err = app.store.Users().Create(ctx, tx, user, &store.UserRole{
+			ID: store.CustomerID,
+		})
+		if err != nil {
+			span.RecordError(err)
+			tx.Rollback()
+			return nil, nil, err
+		}
+		err = app.store.Users().Verify(ctx, tx, user)
+		if err != nil {
+			span.RecordError(err)
+			tx.Rollback()
+			return nil, nil, err
+		}
+		// Commit the transaction
+		if err := tx.Commit(); err != nil {
+			span.RecordError(err)
+			return nil, nil, err
+		}
+
+		return user, &plainToken, nil
+
+	}
+
+	plainToken = uuid.New().String() //TODO: hash and save token, not just the plain token
 	err := app.store.Users().CreateWithVerificationToken(ctx, user, plainToken, ExpiresAtVerificationToken)
 
 	if err != nil {

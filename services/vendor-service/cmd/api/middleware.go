@@ -1,11 +1,46 @@
 package main
 
 import (
+	"context"
+	"fmt"
 	"net/http"
 	"regexp"
 	"strconv"
 	"time"
+
+	"go.opentelemetry.io/otel/codes"
 )
+
+func (app *application) authMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx, span := app.trace.Start(r.Context(), "Auth middleware")
+		defer span.End()
+
+		// Step 1: Verify token
+		claims, err := app.jwt.ExtractAndVerifyToken(r)
+		if err != nil {
+			app.logger.WithContext(ctx).Error("JWT token error", err)
+			span.RecordError(err)
+			span.SetStatus(codes.Error, err.Error())
+			app.unauthorizedErrorResponse(w, r, fmt.Errorf("please provide a valid token: %w", err))
+			return
+		}
+
+		// Step 2: Retrieve user from DB
+		userId, err := strconv.Atoi(claims.UserID)
+		if err != nil {
+			app.logger.WithContext(ctx).Error("Invalid user ID in token", err)
+			app.unauthorizedErrorResponse(w, r, fmt.Errorf("invalid user ID in token"))
+			return
+		}
+
+		// Step 4: Add user and claims to context
+		ctx = context.WithValue(ctx, ContextKeyUser{}, userId)
+
+		// Step 5: Call next handler with the new context
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
+}
 
 func (app *application) metricsMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

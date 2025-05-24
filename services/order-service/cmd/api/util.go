@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -37,4 +38,11 @@ func (app *application) readIntParam(r *http.Request, key string) (int, error) {
 		return 0, fmt.Errorf("invalid %s", key)
 	}
 	return id, nil
+}
+
+type ContextKeyUser struct{}
+
+func getUserIdFromContext(ctx context.Context) (int, bool) {
+	userId, ok := ctx.Value(ContextKeyUser{}).(int)
+	return userId, ok
 }

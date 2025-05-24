@@ -33,6 +33,7 @@ type Storage interface {
 	Tokens() Tokens
 
 	Roles() Roles
+	BeginTx(ctx context.Context) (*sql.Tx, error)
 }
 
 var (

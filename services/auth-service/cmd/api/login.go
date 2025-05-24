@@ -3,12 +3,17 @@ package main
 import (
 	"errors"
 	"net/http"
+	"strconv"
 
 	"github.com/kaasikodes/shop-ease/services/auth-service/internal/store"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 )
 
+type LoginResponse struct {
+	User        store.User `json:"user"`
+	AccessToken string     `json:"accessToken"`
+}
 type LoginUserPayload struct {
 	Email    string `json:"email" validate:"required,email,max=255"`
 	Password string `json:"password" validate:"required,min=5,max=17"`
@@ -70,7 +75,19 @@ func (app *application) loginHandler(w http.ResponseWriter, r *http.Request) {
 		return
 
 	}
+	accessToken, err := app.jwt.CreateToken(strconv.Itoa(user.ID), user.Email, AccessTokenDuration)
+	if err != nil {
+		app.logger.WithContext(parentTraceCtx).Error("Jwt token err", err)
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
+		app.badRequestResponse(w, r, err)
+		return
 
-	app.jsonResponse(w, http.StatusOK, "User logged in successfully!", map[string]any{"user": user, "accessToken": ""})
+	}
+
+	app.jsonResponse(w, http.StatusOK, "User logged in successfully!", LoginResponse{
+		User:        *user,
+		AccessToken: accessToken,
+	})
 
 }

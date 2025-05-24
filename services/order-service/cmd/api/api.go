@@ -8,6 +8,7 @@ import (
 
 	"github.com/kaasikodes/shop-ease/services/order-service/internal/repository"
 	"github.com/kaasikodes/shop-ease/shared/broker"
+	jwttoken "github.com/kaasikodes/shop-ease/shared/jwt_token"
 	"github.com/kaasikodes/shop-ease/shared/logger"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -36,6 +37,8 @@ type application struct {
 	// message broker
 	broker broker.MessageBroker
 	store  repository.OrderRepo
+	// jwt
+	jwt *jwttoken.JwtMaker
 }
 
 func (app *application) mount(reg *prometheus.Registry) http.Handler {
@@ -51,6 +54,7 @@ func (app *application) mount(reg *prometheus.Registry) http.Handler {
 	})
 
 	r.Route("/v1", func(r chi.Router) {
+		r.Use(app.authMiddleware)
 		r.Route("/order", func(r chi.Router) {
 			r.Get("/", app.getOrdersHandler)
 			r.Get("/{orderId}", app.getOrderByIdHandler)

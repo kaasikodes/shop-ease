@@ -22,3 +22,5 @@ func createPaginatedResponse(result []any, total int) paginatedResponse {
 func (app *application) isProduction() bool {
 	return app.config.env == "production"
 }
+
+type ContextKeyUser struct{}

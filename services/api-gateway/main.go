@@ -63,8 +63,9 @@ func run() error {
 	addr := env.GetString("ADDR", ":3000")
 
 	for _, s := range services {
-		// TODO: add auth middleware for all services asides from auth, and push in the details of the user to service as headers or in acontext and test
-		r.Handle(fmt.Sprintf("%s/*", s.prefix), NewProxyHandler(s.scheme, s.host, s.prefix))
+		handler := NewProxyHandler(s.scheme, s.host, s.prefix)
+
+		r.Handle(fmt.Sprintf("%s/*", s.prefix), handler)
 
 	}
 

@@ -8,6 +8,7 @@ import (
 	"github.com/kaasikodes/shop-ease/services/order-service/internal/model"
 	"github.com/kaasikodes/shop-ease/services/order-service/internal/repository"
 	"github.com/kaasikodes/shop-ease/shared/utils"
+	"go.opentelemetry.io/otel/codes"
 )
 
 type changeStatusPayload struct {
@@ -127,12 +128,19 @@ func (app *application) changeOrderItemStatusHandler(w http.ResponseWriter, r *h
 }
 
 func (app *application) createOrderHandler(w http.ResponseWriter, r *http.Request) {
-	ctx, span := app.trace.Start(r.Context(), "http.order.createOrder")
+	ctx := r.Context()
+	userId, ok := getUserIdFromContext(ctx)
+	ctx, span := app.trace.Start(ctx, "http.order.createOrder")
 	defer span.End()
+	if !ok {
+		app.badRequestResponse(w, r, errors.New("unable to retrieve userId"))
+		return
+
+	}
+	app.logger.Info("userId", userId)
 
 	var body struct {
-		UserId int                               `json:"userId"`
-		Items  []repository.CreateOrderInputItem `json:"items"`
+		Items []repository.CreateOrderInputItem `json:"items" validate:"min=1,dive,required"`
 	}
 
 	err := app.readJSON(w, r, &body)
@@ -140,8 +148,15 @@ func (app *application) createOrderHandler(w http.ResponseWriter, r *http.Reques
 		app.badRequestResponse(w, r, err)
 		return
 	}
+	if err := Validate.Struct(body); err != nil {
+		app.logger.WithContext(ctx).Error("Error validating registration payload", err)
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
+		app.badRequestResponse(w, r, err)
+		return
+	}
 
-	if err := app.store.CreateOrder(ctx, body.UserId, body.Items); err != nil {
+	if err := app.store.CreateOrder(ctx, userId, body.Items); err != nil {
 		app.logger.Error("CreateOrder failed", err)
 		app.internalServerError(w, r, err)
 		return

@@ -293,6 +293,9 @@ func (u *SQLUserStore) GetByEmailOrId(ctx context.Context, user *User) (*User, e
 	defer cancel()
 	err := u.db.QueryRowContext(ctx, queryU, user.ID, user.Email).Scan(&user.ID, &user.Email, &user.Name, &user.IsVerified, &pwdHash, &user.VerifiedAt)
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, store.ErrNoUserFound
+		}
 		return nil, err
 	}
 	log.Println(user, "user 2 ...")

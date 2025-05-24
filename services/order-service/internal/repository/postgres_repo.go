@@ -40,9 +40,9 @@ func (r *PostgresOrderRepo) CreateOrder(ctx context.Context, userId int, items [
 	// Insert Order Items
 	for _, item := range items {
 		_, err := tx.ExecContext(ctx, `
-			INSERT INTO order_items (order_id, product_id, store_id, quantity, created_at, updated_at)
-			VALUES ($1, $2, $3, $4, NOW(), NOW())
-		`, orderId, item.ProductId, item.StoreId, item.Quantity)
+			INSERT INTO order_items (order_id, product_id, store_id, price, quantity,amount_to_be_paid, created_at, updated_at, status)
+			VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW(), 'pending')
+		`, orderId, item.ProductId, item.StoreId, item.Price, item.Quantity, item.AmountToBePaid)
 		if err != nil {
 			return err
 		}

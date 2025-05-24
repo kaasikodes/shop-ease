@@ -136,6 +136,44 @@ Folders
 
 # Oauth Compliant Auth Service in Go
 
-## Other
+As with any concept, pictures do help alot. I have taken the liberty to create a diagram that illustrates what we would be building today. Now before we discuss the diagram its important that you the audience is familiar with some terms
 
-Let's focus on what value can I provide for you - from what has been presented so far it seems ....
+- oauth
+- jwt
+- claims
+- oidc
+  Now in a typical stateless auth system which is what we would be building most applications will be staisfied with the jsw holding state like the user id name roles on the app, etc. and will likely make use of some oauth services like google, apple, etc. Now this is fine, now in the event that your system gets popular like lets say google or other systems need to integrate their entry point more often than not especially in the case of b2c applications will be the auth service. And its important to account for this when building your auth service. A key aspect in building scalable systems in accounting for extensibility. For any system to be extensible its has to enforce or adhere to some sought of standard, in the world of software engineering this standards are what we commonly refer to as protocols. That is why its easy for you to add google, apple as an auth provider in your application because they all follow a statndard that enables an easy and predictable api. And if we do follow this standard, oauth. Our application will eb extensible as well, and it will be easy for other applications to easily use our service
+
+Diagram - > will show the auth service and its components register, login, verify, etc. and how they will interact with storage, then will show the middleware that will be exposed as a guard to be used by other services. Then the external oauth providers that will tie into the register, and login. And then our oauth that will be exposed for other applications to use as an oauth provider
+
+Talk about and show code for the following
+
+- login
+- register
+- middleware
+
+Buil Flow
+
+- normal routes
+- oauth login for external provider as interface, and then map to have user pick, test out
+- oauth exposed by our service
+
+Conclusion
+
+## Auth service
+
+so we'll discuss
+
+- app native authentication mechanism: you regular old login, register, and logoout routes
+- oauth provider integration: example with github
+- Exposing our very own oauth service: a focus on building extensible and compliant systems, a compliant system is an extensible one ...
+
+The diagram below showcase the proposed architecture of our auth service
+
+### App Native Auth Mechanism
+
+### Oauth Provider Integration
+
+### Creating and exposing our own oauth provider to be consumed by other
+
+Conclusion

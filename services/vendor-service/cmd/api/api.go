@@ -11,6 +11,7 @@ import (
 	"github.com/kaasikodes/shop-ease/services/vendor-service/internal/seller"
 	"github.com/kaasikodes/shop-ease/services/vendor-service/internal/store"
 	"github.com/kaasikodes/shop-ease/shared/broker"
+	jwttoken "github.com/kaasikodes/shop-ease/shared/jwt_token"
 	"github.com/kaasikodes/shop-ease/shared/logger"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -44,6 +45,8 @@ type application struct {
 		orders orders.OrderRepo
 		seller seller.SellerRepo
 	}
+	// jwt
+	jwt *jwttoken.JwtMaker
 }
 
 func (app *application) mount(reg *prometheus.Registry) http.Handler {

@@ -7,6 +7,7 @@ import (
 	"github.com/kaasikodes/shop-ease/shared/database"
 	"github.com/kaasikodes/shop-ease/shared/env"
 	"github.com/kaasikodes/shop-ease/shared/events"
+	jwttoken "github.com/kaasikodes/shop-ease/shared/jwt_token"
 	"github.com/kaasikodes/shop-ease/shared/logger"
 	"github.com/kaasikodes/shop-ease/shared/observability"
 	"github.com/prometheus/client_golang/prometheus"
@@ -54,6 +55,9 @@ func main() {
 
 	broker := broker.NewKafkaHelper([]string{":9092"}, events.ProductTopic)
 	defer broker.Close()
+
+	// set up jwt
+	jwt := jwttoken.NewJwtMaker(env.GetString("JWT_SECRET", ""))
 	var app = &application{
 		config:  cfg,
 		logger:  logger,
@@ -62,6 +66,7 @@ func main() {
 		broker:  broker,
 
 		store: store,
+		jwt:   jwt,
 	}
 	mux := app.mount(metricsReg)
 
