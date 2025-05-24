@@ -3,6 +3,7 @@ package main
 import (
 	grpc_client "github.com/kaasikodes/shop-ease/services/auth-service/cmd/grpc"
 	"github.com/kaasikodes/shop-ease/services/auth-service/internal/db"
+	grpc_server "github.com/kaasikodes/shop-ease/services/auth-service/internal/grpc-server"
 	"github.com/kaasikodes/shop-ease/services/auth-service/internal/oauth/provider"
 	"github.com/kaasikodes/shop-ease/shared/env"
 	jwttoken "github.com/kaasikodes/shop-ease/shared/jwt_token"
@@ -36,6 +37,7 @@ func main() {
 	logger := logger.New(logCfg)
 	// logger := logger.NewZapLogger(logCfg)
 	cfg := config{
+		grpcAddr:    env.GetString("GRPC_ADDR", ":4010"),
 		addr:        env.GetString("ADDR", ":3010"),
 		apiURL:      env.GetString("API_URL", "localhost:9010"),
 		frontendUrl: env.GetString("FRONTEND_URL", "localhost:3000"),
@@ -84,6 +86,21 @@ func main() {
 	}
 	mux := app.mount(metricsReg)
 
+	// grpc server
+	go func() {
+		authGrpcServer := grpc_server.NewAuthGRPCServer(cfg.grpcAddr, grpc_server.Config{
+			Db: grpc_server.DbConfig{
+				Addr:         cfg.db.addr,
+				MaxOpenConns: cfg.db.maxOpenConns,
+				MaxIdleConns: cfg.db.maxIdleConns,
+				MaxIdleTime:  cfg.db.maxIdleTime,
+			},
+		}, logger)
+		logger.Fatal(authGrpcServer.Run()) //has a graceful shutdown built in, consider revisting ...
+
+	}()
+
+	// http server
 	logger.Fatal(app.run(mux))
 
 }

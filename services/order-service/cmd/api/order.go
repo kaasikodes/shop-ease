@@ -155,13 +155,13 @@ func (app *application) createOrderHandler(w http.ResponseWriter, r *http.Reques
 		app.badRequestResponse(w, r, err)
 		return
 	}
-
-	if err := app.store.CreateOrder(ctx, userId, body.Items); err != nil {
+	orderId, err := app.store.CreateOrder(ctx, userId, body.Items)
+	if err != nil {
 		app.logger.Error("CreateOrder failed", err)
 		app.internalServerError(w, r, err)
 		return
 	}
 
-	app.jsonResponse(w, http.StatusOK, "Order created successfully!", nil)
+	app.jsonResponse(w, http.StatusOK, "Order created successfully!", map[string]any{"orderId": orderId, "itemCount": len(body.Items)})
 
 }

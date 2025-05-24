@@ -8,3 +8,4 @@ protoc --go_out=. --go-grpc_out=. ./proto/subscription.proto
 protoc --go_out=. --go-grpc_out=. ./proto/payment.proto
 protoc --go_out=. --go-grpc_out=. ./proto/product.proto
 protoc --go_out=. --go-grpc_out=. ./proto/order.proto
+protoc --go_out=. --go-grpc_out=. ./proto/auth.proto

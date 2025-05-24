@@ -10,6 +10,7 @@ import (
 	"github.com/kaasikodes/shop-ease/shared/broker"
 	jwttoken "github.com/kaasikodes/shop-ease/shared/jwt_token"
 	"github.com/kaasikodes/shop-ease/shared/logger"
+	"github.com/kaasikodes/shop-ease/shared/proto/auth"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.opentelemetry.io/otel/trace"
@@ -39,6 +40,12 @@ type application struct {
 	store  repository.OrderRepo
 	// jwt
 	jwt *jwttoken.JwtMaker
+	//grpc clients
+	clients Clients
+}
+
+type Clients struct {
+	auth auth.AuthServiceClient
 }
 
 func (app *application) mount(reg *prometheus.Registry) http.Handler {
@@ -55,6 +62,7 @@ func (app *application) mount(reg *prometheus.Registry) http.Handler {
 
 	r.Route("/v1", func(r chi.Router) {
 		r.Use(app.authMiddleware)
+		r.Use(app.isCustomerActiveMiddleware)
 		r.Route("/order", func(r chi.Router) {
 			r.Get("/", app.getOrdersHandler)
 			r.Get("/{orderId}", app.getOrderByIdHandler)

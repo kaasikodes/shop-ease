@@ -2,15 +2,61 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"regexp"
 	"strconv"
 	"time"
 
+	"github.com/kaasikodes/shop-ease/shared/proto/auth"
 	"go.opentelemetry.io/otel/codes"
 )
 
+func (app *application) isCustomerActiveMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		ctx, span := app.trace.Start(ctx, "Customer middleware")
+		defer span.End()
+		userId, ok := getUserIdFromContext(ctx)
+		if !ok {
+			err := errors.New("unable to retrieve userId")
+			app.logger.WithContext(ctx).Error("Unable to retrieve userId", err)
+			span.RecordError(err)
+			span.SetStatus(codes.Error, err.Error())
+			app.badRequestResponse(w, r, err)
+			return
+		}
+
+		// get user from auth service
+		user, err := app.clients.auth.GetUserById(ctx, &auth.GetUserByIdRequest{UserId: int32(userId)})
+		if err != nil {
+			app.logger.WithContext(ctx).Error("err", err)
+			span.RecordError(err)
+			span.SetStatus(codes.Error, err.Error())
+			app.unauthorizedErrorResponse(w, r, fmt.Errorf("unable to retrieve client: %w", err))
+			return
+		}
+		userRoles := user.User.Roles
+		isCustomerActive := false
+		for _, role := range userRoles {
+			if role.IsActive && role.Name == "customer" {
+				isCustomerActive = true
+				return
+			}
+		}
+		app.logger.WithContext(ctx).Info("user info for customer", user)
+
+		if !isCustomerActive {
+			app.unauthorizedErrorResponse(w, r, errors.New("customer account is deactivated"))
+			return
+
+		}
+
+		// Step 5: Call next handler with the new context
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
+}
 func (app *application) authMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx, span := app.trace.Start(r.Context(), "Auth middleware")

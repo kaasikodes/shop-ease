@@ -22,7 +22,7 @@ type OrderFilter struct {
 	ProductId int
 }
 type OrderRepo interface {
-	CreateOrder(ctx context.Context, userId int, items []CreateOrderInputItem) error
+	CreateOrder(ctx context.Context, userId int, items []CreateOrderInputItem) (*int, error)
 	UpdateOrderStatus(ctx context.Context, orderId int, status model.OrderStatus) error
 	UpdateOrderItemStatus(ctx context.Context, orderItemId int, status model.OrderStatus) error
 	GetOrderById(ctx context.Context, orderId int) (model.Order, error)

@@ -19,10 +19,10 @@ func NewPostgresOrderRepo(db *sql.DB) *PostgresOrderRepo {
 	return &PostgresOrderRepo{db}
 }
 
-func (r *PostgresOrderRepo) CreateOrder(ctx context.Context, userId int, items []CreateOrderInputItem) error {
+func (r *PostgresOrderRepo) CreateOrder(ctx context.Context, userId int, items []CreateOrderInputItem) (*int, error) {
 	tx, err := r.db.BeginTx(ctx, nil)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	defer tx.Rollback()
 
@@ -34,21 +34,21 @@ func (r *PostgresOrderRepo) CreateOrder(ctx context.Context, userId int, items [
 		RETURNING id
 	`, userId, string(model.UnpaidOrPendingOrderStatus)).Scan(&orderId)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// Insert Order Items
 	for _, item := range items {
 		_, err := tx.ExecContext(ctx, `
 			INSERT INTO order_items (order_id, product_id, store_id, price, quantity,amount_to_be_paid, created_at, updated_at, status)
-			VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW(), 'pending')
-		`, orderId, item.ProductId, item.StoreId, item.Price, item.Quantity, item.AmountToBePaid)
+			VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW(), $7)
+		`, orderId, item.ProductId, item.StoreId, item.Price, item.Quantity, item.AmountToBePaid, model.UnpaidOrPendingOrderStatus)
 		if err != nil {
-			return err
+			return nil, err
 		}
 	}
 
-	return tx.Commit()
+	return &orderId, tx.Commit()
 }
 
 func (r *PostgresOrderRepo) UpdateOrderStatus(ctx context.Context, orderId int, status model.OrderStatus) error {

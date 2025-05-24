@@ -84,8 +84,8 @@ func (app *application) run(mux http.Handler) error {
 
 	go func() {
 		app.logger.Info("Grpc server running in the background on .....", app.config.addr)
-		server := NewPaymentGRPCServer(app.config.grpcAddr, app.config, app.logger)
-		server.Run() //has a graceful shutdown built in, consider revisting ...
+		grpcServer := NewPaymentGRPCServer(app.config.grpcAddr, app.config, app.logger)
+		grpcServer.Run() //has a graceful shutdown built in, consider revisting ...
 
 	}()
 

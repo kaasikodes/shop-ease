@@ -1,12 +1,12 @@
-package main
+package grpc_server
 
 import (
 	"fmt"
 	"net"
 
-	"github.com/kaasikodes/shop-ease/services/notification-service/db"
-	"github.com/kaasikodes/shop-ease/services/payment-service/internal/handler"
-	"github.com/kaasikodes/shop-ease/services/payment-service/internal/repository"
+	store "github.com/kaasikodes/shop-ease/services/auth-service/internal/store/sql-store"
+
+	"github.com/kaasikodes/shop-ease/shared/database"
 	"github.com/kaasikodes/shop-ease/shared/logger"
 	"github.com/kaasikodes/shop-ease/shared/observability"
 	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
@@ -14,13 +14,24 @@ import (
 	"google.golang.org/grpc"
 )
 
+type Config struct {
+	Db DbConfig
+}
+
+type DbConfig struct {
+	Addr         string
+	MaxOpenConns int
+	MaxIdleConns int
+	MaxIdleTime  string
+}
+
 type gRPCServer struct {
 	addr   string
-	config config
+	config Config
 	logger logger.Logger
 }
 
-func NewPaymentGRPCServer(addr string, config config, logger logger.Logger) *gRPCServer {
+func NewAuthGRPCServer(addr string, config Config, logger logger.Logger) *gRPCServer {
 	logger.Info("addr for payment grpc server", addr)
 	return &gRPCServer{addr, config, logger}
 
@@ -34,20 +45,20 @@ func (s *gRPCServer) Run() error {
 	}
 
 	grpcServer := grpc.NewServer(grpc.UnaryInterceptor(otelgrpc.UnaryServerInterceptor()))
-	db, err := db.New(s.config.db.addr, s.config.db.maxOpenConns, s.config.db.maxIdleConns, s.config.db.maxIdleTime)
+	db, err := database.NewMySqlDB(s.config.Db.Addr, s.config.Db.MaxOpenConns, s.config.Db.MaxIdleConns, s.config.Db.MaxIdleTime)
 	if err != nil {
 		return err
 	}
 	defer db.Close()
 
 	// tracer
-	store := repository.NewSqlPaymentRepo()
+	store := store.NewSQLStorage(db)
 	shutdown := observability.InitTracer("notification-service")
 	defer shutdown()
 
 	trace := otel.Tracer("app.notification/trace")
 
-	handler.NewPaymentGRPCHandler(grpcServer, store, trace, s.logger)
+	NewAuthGRPCHandler(grpcServer, store, trace, s.logger)
 	s.logger.Info("The GRPC SERVER IS UP >>>>>>")
 
 	return grpcServer.Serve(lis)

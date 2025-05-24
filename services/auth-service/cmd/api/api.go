@@ -19,6 +19,7 @@ import (
 
 type config struct {
 	addr        string
+	grpcAddr    string
 	db          dbConfig
 	env         string
 	apiURL      string
