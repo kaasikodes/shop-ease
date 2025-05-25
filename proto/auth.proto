@@ -32,20 +32,4 @@ message Role {
     string name = 2;
     bool isActive = 3;
 }
-// create proto, to get user details via grpc
-// the order service calls this on middleware on fisrt call updates cache on subsequent calls uses cache
-// on deactivation of customer, the cache is updated and updated after a day as bg job(no need to track token expiration), if err with token expires or invalid the entry is also deleted from cache
-// admin service can also deactivate the auth service - so a user can deactivate his customer account
 
-
-// then pass in clients to order service like - product, auth
-// work on 3 articles share on linkedin
-// then go back to the implementation of jwt with private/public key - write article on and share on all platforms, also on discord. Inform of reason why this was implemented
-// apply n track where you applied from
-// can work on main article for intro later
-// add posts to golang community on linkedin
-// post everytime disturb them you know your shit
-// work on linkedin profile
-
-
-// Focus on learning , and preparing for interview not completing projects
