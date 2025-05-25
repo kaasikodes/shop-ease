@@ -6,6 +6,7 @@ import (
 
 	"github.com/go-chi/chi"
 
+	"github.com/kaasikodes/shop-ease/services/order-service/internal/cache"
 	"github.com/kaasikodes/shop-ease/services/order-service/internal/repository"
 	"github.com/kaasikodes/shop-ease/shared/broker"
 	jwttoken "github.com/kaasikodes/shop-ease/shared/jwt_token"
@@ -42,8 +43,14 @@ type application struct {
 	jwt *jwttoken.JwtMaker
 	//grpc clients
 	clients Clients
+	// cache
+	cache Cache
 }
 
+type Cache struct {
+	memory cache.CacheRepo
+	redis  cache.CacheRepo
+}
 type Clients struct {
 	auth auth.AuthServiceClient
 }
@@ -61,7 +68,7 @@ func (app *application) mount(reg *prometheus.Registry) http.Handler {
 	})
 
 	r.Route("/v1", func(r chi.Router) {
-		r.Use(app.authMiddleware)
+		r.Use((app.authMiddleware))
 		r.Use(app.isCustomerActiveMiddleware)
 		r.Route("/order", func(r chi.Router) {
 			r.Get("/", app.getOrdersHandler)

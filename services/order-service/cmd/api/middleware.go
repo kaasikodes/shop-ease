@@ -9,10 +9,68 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/kaasikodes/shop-ease/services/order-service/internal/cache"
 	"github.com/kaasikodes/shop-ease/shared/proto/auth"
 	"go.opentelemetry.io/otel/codes"
 )
 
+func (app *application) getUserWithReadThrough(ctx context.Context, id int) (*cache.UserInfo, error) {
+	// 1. In-memory
+	if info, err := app.cache.memory.GetUserInfo(ctx, id); err == nil {
+		app.logger.Info("from memory", info)
+		return info, nil
+	}
+
+	// 2. Redis
+	if info, err := app.cache.redis.GetUserInfo(ctx, id); err == nil {
+		go func() {
+			err := app.cache.memory.StoreUserInfo(context.Background(), *info) // populate in-memory
+			if err != nil {
+				app.logger.Error("failed to store in memory", err)
+
+			}
+
+		}()
+		app.logger.Info("from redis", info)
+		return info, nil
+	}
+
+	// 3. Get from auth client(the source)
+	user, err := app.clients.auth.GetUserById(ctx, &auth.GetUserByIdRequest{UserId: int32(id)})
+	if err != nil {
+		return nil, err
+	}
+	roles := make([]cache.Role, len(user.User.Roles))
+	for i, r := range user.User.Roles {
+		roles[i] = cache.Role{
+			Id:       int(r.Id),
+			IsActive: r.IsActive,
+			Name:     r.Name,
+		}
+	}
+	info := cache.UserInfo{
+		Id:    int(user.User.Id),
+		Name:  user.User.Name,
+		Email: user.User.Email,
+		Roles: roles,
+	}
+	app.logger.Info("from auth client", info)
+	go func() {
+		err = app.cache.redis.StoreUserInfo(context.Background(), info) // populate redis
+		if err != nil {
+			app.logger.Error("failed to store in Redis", err)
+
+		}
+		_ = app.cache.memory.StoreUserInfo(context.Background(), info) // populate in-memory
+		if err != nil {
+			app.logger.Error("failed to store in Memory", err)
+
+		}
+
+	}()
+	return &info, nil
+
+}
 func (app *application) isCustomerActiveMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
@@ -29,7 +87,7 @@ func (app *application) isCustomerActiveMiddleware(next http.Handler) http.Handl
 		}
 
 		// get user from auth service
-		user, err := app.clients.auth.GetUserById(ctx, &auth.GetUserByIdRequest{UserId: int32(userId)})
+		user, err := app.getUserWithReadThrough(ctx, userId)
 		if err != nil {
 			app.logger.WithContext(ctx).Error("err", err)
 			span.RecordError(err)
@@ -37,12 +95,12 @@ func (app *application) isCustomerActiveMiddleware(next http.Handler) http.Handl
 			app.unauthorizedErrorResponse(w, r, fmt.Errorf("unable to retrieve client: %w", err))
 			return
 		}
-		userRoles := user.User.Roles
+		userRoles := user.Roles
 		isCustomerActive := false
 		for _, role := range userRoles {
 			if role.IsActive && role.Name == "customer" {
 				isCustomerActive = true
-				return
+				break
 			}
 		}
 		app.logger.WithContext(ctx).Info("user info for customer", user)
@@ -59,7 +117,8 @@ func (app *application) isCustomerActiveMiddleware(next http.Handler) http.Handl
 }
 func (app *application) authMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		ctx, span := app.trace.Start(r.Context(), "Auth middleware")
+		ctx := r.Context()
+		ctx, span := app.trace.Start(ctx, "Auth middleware")
 		defer span.End()
 
 		// Step 1: Verify token

@@ -1,6 +1,9 @@
 package main
 
 import (
+	"time"
+
+	"github.com/kaasikodes/shop-ease/services/order-service/internal/cache"
 	"github.com/kaasikodes/shop-ease/services/order-service/internal/handler"
 	"github.com/kaasikodes/shop-ease/services/order-service/internal/repository"
 	"github.com/kaasikodes/shop-ease/shared/broker"
@@ -64,6 +67,10 @@ func main() {
 
 	// set up jwt
 	jwt := jwttoken.NewJwtMaker(env.GetString("JWT_SECRET", ""))
+
+	// cache
+	inMemoryCache := cache.NewInMemoryCache(time.Duration(time.Hour*24*1), time.Duration(time.Hour*24*3))
+	redisCache := cache.NewRedisCache(env.GetString("REDIS_ADDR", ""), env.GetString("REDIS_PWD", ""), env.GetInt("REDIS_LOGICAL_DB", 1), serviceIdentifier, time.Duration(time.Hour*24*1))
 	var app = &application{
 		config:  cfg,
 		logger:  logger,
@@ -74,6 +81,10 @@ func main() {
 		jwt:     jwt,
 		clients: Clients{
 			auth: authClient,
+		},
+		cache: Cache{
+			memory: inMemoryCache,
+			redis:  redisCache,
 		},
 	}
 	mux := app.mount(metricsReg)

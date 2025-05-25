@@ -1,0 +1,9 @@
+#!/usr/bin/bash
+
+docker run -d \
+  --name redis-server \
+  -p 6379:6379 \
+  -v redis-data:/data \
+  redis:7-alpine \
+  --requirepass a02122bfc7b8a6f2dcd843b9 \
+  --save 60 1 --loglevel warning

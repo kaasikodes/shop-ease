@@ -1,0 +1,7 @@
+#!/usr/bin/bash
+
+
+docker run -d \
+  --name redis-insight \
+  -p 8001:8001 \
+  redis/redisinsight:latest
