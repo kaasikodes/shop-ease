@@ -27,3 +27,6 @@ go.work
 /dev
 ./dev
 ./dev/*
+./scripts
+./scripts/
+./scripts/*
