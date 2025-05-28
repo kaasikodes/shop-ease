@@ -11,12 +11,12 @@ type EntityPaymentType string
 type PaymentStatus string
 
 var (
-	VendorSubscriptionPayment EntityPaymentType = "vendor"
-	OrderPayment              EntityPaymentType = "order"
+	EntityPaymentTypeVendorSubscriptionPayment EntityPaymentType = "vendor"
+	EntityPaymentTypeOrderPayment              EntityPaymentType = "order"
 )
 var (
-	PaystackPaymentProvider PaymentProvider = "paystack"
-	FlutterPaymentProvider  PaymentProvider = "flutter"
+	PaymentProviderPaystack PaymentProvider = "paystack"
+	PaymentProviderFlutter  PaymentProvider = "flutter"
 )
 
 type TransactionFilter struct {

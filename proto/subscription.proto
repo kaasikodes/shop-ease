@@ -42,4 +42,12 @@ message VendorSubscription {
     string updated_at = 7;  
     bool hasPaid = 8;  
     string paid_at = 9;  
+    VendorPlan plan = 10;
+}
+
+
+message VendorPlan {
+    int64 id  = 1;
+    string name = 2;
+    int64 amount = 3;
 }

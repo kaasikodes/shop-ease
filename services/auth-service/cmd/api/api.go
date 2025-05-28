@@ -12,6 +12,9 @@ import (
 	jwttoken "github.com/kaasikodes/shop-ease/shared/jwt_token"
 	"github.com/kaasikodes/shop-ease/shared/logger"
 	"github.com/kaasikodes/shop-ease/shared/proto/notification"
+	"github.com/kaasikodes/shop-ease/shared/proto/payment"
+	"github.com/kaasikodes/shop-ease/shared/proto/subscription"
+	"github.com/kaasikodes/shop-ease/shared/proto/vendor_service"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.opentelemetry.io/otel/trace"
@@ -58,6 +61,14 @@ type application struct {
 	oauthProviderRegistry map[provider.OauthProviderType]provider.OauthProvider
 	// jwt
 	jwt *jwttoken.JwtMaker
+	// grpc clients
+	clients Clients
+}
+
+type Clients struct {
+	vendor       vendor_service.VendorServiceClient
+	subscription subscription.SubscriptionServiceClient
+	payment      payment.PaymentServiceClient
 }
 
 func (app *application) mount(reg *prometheus.Registry) http.Handler {

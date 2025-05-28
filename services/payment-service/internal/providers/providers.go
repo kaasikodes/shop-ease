@@ -15,7 +15,7 @@ type PaymentRequest struct {
 }
 
 type PaymentGateway interface {
-	InitiateTransaction(ctx context.Context, req PaymentRequest) (transactionID string, meta map[string]string, err error)
+	InitiateTransaction(ctx context.Context, req PaymentRequest) (transactionID string, paymentUrl string, meta map[string]string, err error)
 	HandleWebhook(w http.ResponseWriter, r *http.Request) error
 }
 

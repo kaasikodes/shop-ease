@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strconv"
 	"time"
 
 	"go.opentelemetry.io/otel/attribute"
@@ -12,7 +13,11 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/kaasikodes/shop-ease/services/auth-service/internal/store"
+	"github.com/kaasikodes/shop-ease/services/payment-service/pkg/model"
 	"github.com/kaasikodes/shop-ease/shared/proto/notification"
+	"github.com/kaasikodes/shop-ease/shared/proto/payment"
+	"github.com/kaasikodes/shop-ease/shared/proto/subscription"
+	"github.com/kaasikodes/shop-ease/shared/proto/vendor_service"
 	"go.opentelemetry.io/otel/codes"
 )
 
@@ -24,7 +29,8 @@ type RegisterUserPayload struct {
 	Vendor   *VendorPayload      `json:"vendorInformation" validate:"-"`
 }
 type VendorPayload struct {
-	Store struct {
+	SubscriptionPlanId int64
+	Store              struct {
 		Name    string
 		Address string
 		Contact struct {
@@ -119,8 +125,19 @@ func (app *application) registerHandler(w http.ResponseWriter, r *http.Request) 
 
 		return
 	case store.VendorID:
-		registerVendor()
-		app.jsonResponse(w, http.StatusCreated, "Vendor account created successfully, please check email for a verification link!", nil)
+		paymentUrl, err := app.registerVendor(ctx, payload)
+		if err != nil {
+			app.logger.WithContext(registerTraceCtx).Error("Error registering vendor", err)
+			span.RecordError(err)
+			span.SetStatus(codes.Error, err.Error())
+			if err == store.ErrDuplicateEmail {
+				app.badRequestResponse(w, r, err)
+				return
+			}
+			app.internalServerError(w, r, err)
+			return
+		}
+		app.jsonResponse(w, http.StatusCreated, "Please use the payment link to pay for your vendor subscription!", map[string]string{"paymentUrl": paymentUrl})
 		return
 	default:
 		app.badRequestResponse(w, r, errors.New("please select a valid role id"))
@@ -186,7 +203,94 @@ func (app *application) registerCustomer(ctx context.Context, payload RegisterUs
 	return user, &plainToken, nil
 
 }
-func registerVendor() {
+func (app *application) registerVendor(ctx context.Context, payload RegisterUserPayload) (paymentUrl string, err error) {
+	// TODO: Not enough use cases accounted for, for verification on payment should verify user if not verified
+	_, span := app.trace.Start(ctx, "register-vendor")
+	defer span.End()
+	user := &store.User{
+		Name:  payload.Name,
+		Email: payload.Email,
+	}
+	if err := user.Password.Set(payload.Password); err != nil {
+		return "", err
+	}
+
+	// Start a new transaction
+	tx, err := app.store.BeginTx(ctx)
+	if err != nil {
+		span.RecordError(err)
+		return "", err
+	}
+
+	err = app.store.Users().Create(ctx, tx, user, &store.UserRole{
+		ID: store.CustomerID,
+	})
+	if err != nil {
+		span.RecordError(err)
+		tx.Rollback()
+		return "", err
+	}
+	err = app.store.Users().Verify(ctx, tx, user)
+	if err != nil {
+		span.RecordError(err)
+		tx.Rollback()
+		return "", err
+	}
+
+	// create vendor
+	vendor, err := app.clients.vendor.CreateVendor(ctx, &vendor_service.CreateVendorRequest{
+		Email:  payload.Email,
+		Name:   payload.Name,
+		Phone:  &payload.Vendor.Store.Contact.phone,
+		UserId: int64(user.ID),
+	})
+
+	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
+		tx.Rollback()
+
+		return "", nil
+	}
+	// create subscription plan for vendor
+	subscription, err := app.clients.subscription.CreateVendorSubscription(ctx, &subscription.CreateVendorSubscriptionRequest{
+		VendorId: vendor.Id,
+		PlanId:   payload.Vendor.SubscriptionPlanId,
+	})
+
+	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
+		tx.Rollback()
+
+		return "", nil
+	}
+	// then create payment for subscription
+	paymentData, err := app.clients.payment.CreateTransaction(ctx, &payment.CreateTransactionRequest{
+		EntityId:          subscription.Id,
+		Provider:          string(model.PaymentProviderPaystack),
+		EntityPaymentType: string(model.EntityPaymentTypeVendorSubscriptionPayment),
+		Amount:            subscription.Plan.Amount,
+		MetaData: map[string]string{
+			"reason":      "first time payment for vendor subscription; new vendor registration",
+			"amount_paid": strconv.Itoa(int(subscription.Plan.Amount)),
+		},
+	})
+	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
+		tx.Rollback()
+
+		return "", nil
+	}
+	// Commit the transaction
+	if err := tx.Commit(); err != nil {
+		span.RecordError(err)
+		return "", err
+	}
+	// return the payment url to user
+	return paymentData.PaymentUrl, nil
+
 	// the payload should account for the subscription plan selected as a vendor,
 	// a vendor acccount should be created (vendor service will have a middleware that will always check with subscription service wether or not the the vendor_sub_plan_is_active)
 	// Talk to subscription service to update the vendors on this plan

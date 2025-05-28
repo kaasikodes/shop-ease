@@ -15,5 +15,5 @@ type PaystackGateway struct {
 func NewPaystackGateway(apiKey string, store repository.PaymentRepo) *PaystackGateway {
 	return &PaystackGateway{apiKey, store}
 }
-func (p *PaystackGateway) InitiateTransaction(ctx context.Context, req PaymentRequest) (transactionID string, meta map[string]string, err error)
+func (p *PaystackGateway) InitiateTransaction(ctx context.Context, req PaymentRequest) (transactionID string, paymentUrl string, meta map[string]string, err error)
 func (p *PaystackGateway) HandleWebhook(w http.ResponseWriter, r *http.Request) error

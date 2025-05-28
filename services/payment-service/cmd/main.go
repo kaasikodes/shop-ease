@@ -19,11 +19,6 @@ var version = "0.0.0"
 var serviceIdentifier = "payment_service"
 
 func main() {
-	store := repository.NewSqlPaymentRepo()
-
-	// register payment provider
-	providers.RegisterProvider(model.PaystackPaymentProvider, providers.NewPaystackGateway(env.GetString("PAYSTACK_API_KEY", ""), store))
-	providers.RegisterProvider(model.FlutterPaymentProvider, providers.NewFlutterkGateway(env.GetString("FLUTTER_API_KEY", ""), store))
 
 	shutdown := observability.InitTracer("payment-service")
 
@@ -53,6 +48,7 @@ func main() {
 		logger.Fatal(err)
 	}
 	defer db.Close()
+	store := repository.NewSqlPaymentRepo(db)
 	logger.Info("database connection estatblished")
 
 	metricsReg := prometheus.NewRegistry()
@@ -60,6 +56,9 @@ func main() {
 
 	broker := broker.NewKafkaHelper([]string{":9092"}, events.PaymentTopic)
 	defer broker.Close()
+	// register payment provider
+	providers.RegisterProvider(model.PaymentProviderPaystack, providers.NewPaystackGateway(env.GetString("PAYSTACK_API_KEY", ""), store))
+	providers.RegisterProvider(model.PaymentProviderFlutter, providers.NewFlutterkGateway(env.GetString("FLUTTER_API_KEY", ""), store))
 	var app = &application{
 		config:  cfg,
 		logger:  logger,

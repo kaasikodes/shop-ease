@@ -41,7 +41,7 @@ func (s *gRPCServer) Run() error {
 	defer db.Close()
 
 	// tracer
-	store := repository.NewSqlPaymentRepo()
+	store := repository.NewSqlPaymentRepo(db)
 	shutdown := observability.InitTracer("notification-service")
 	defer shutdown()
 

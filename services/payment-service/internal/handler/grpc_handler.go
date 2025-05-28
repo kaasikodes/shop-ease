@@ -2,9 +2,13 @@ package handler
 
 import (
 	"context"
+	"errors"
+	"strconv"
 
 	"github.com/kaasikodes/shop-ease/services/payment-service/internal/model"
+	"github.com/kaasikodes/shop-ease/services/payment-service/internal/providers"
 	"github.com/kaasikodes/shop-ease/services/payment-service/internal/repository"
+	"github.com/kaasikodes/shop-ease/shared/env"
 	"github.com/kaasikodes/shop-ease/shared/logger"
 	"github.com/kaasikodes/shop-ease/shared/types"
 
@@ -15,21 +19,42 @@ import (
 )
 
 type PaymentGrpcHandler struct {
-	trace  trace.Tracer
-	logger logger.Logger
-	store  repository.PaymentRepo
+	trace           trace.Tracer
+	logger          logger.Logger
+	store           repository.PaymentRepo
+	paymentRegistry map[model.PaymentProvider]providers.PaymentGateway
 	payment.UnimplementedPaymentServiceServer
 }
 
 func NewPaymentGRPCHandler(s *grpc.Server, store repository.PaymentRepo, trace trace.Tracer, logger logger.Logger) {
+	providers.RegisterProvider(model.PaymentProviderPaystack, providers.NewPaystackGateway(env.GetString("PAYSTACK_API_KEY", ""), store))
+	providers.RegisterProvider(model.PaymentProviderFlutter, providers.NewFlutterkGateway(env.GetString("FLUTTER_API_KEY", ""), store))
 
-	handler := &PaymentGrpcHandler{trace: trace, logger: logger, store: store}
+	handler := &PaymentGrpcHandler{trace: trace, logger: logger, store: store, paymentRegistry: providers.ProviderRegistry}
 
 	// register the NotificationServiceServer
 	payment.RegisterPaymentServiceServer(s, handler)
 
 }
 
+func (n *PaymentGrpcHandler) CreateTransaction(ctx context.Context, payload *payment.CreateTransactionRequest) (*payment.CreateTransactionResponse, error) {
+	provider, ok := n.paymentRegistry[model.PaymentProvider(payload.Provider)]
+	if !ok {
+		return nil, errors.New("could not retrieve specified provider")
+	}
+	_, paymentUrl, _, err := provider.InitiateTransaction(ctx, providers.PaymentRequest{
+		Amount:     float64(payload.Amount),
+		EntityID:   strconv.Itoa(int(payload.EntityId)),
+		EntityType: model.EntityPaymentType(payload.EntityPaymentType),
+		MetaData:   map[string]string{"provider": (payload.Provider)},
+	})
+	if err != nil {
+		return nil, err
+	}
+	return &payment.CreateTransactionResponse{
+		PaymentUrl: paymentUrl,
+	}, nil
+}
 func (n *PaymentGrpcHandler) GetTransactions(ctx context.Context, payload *payment.GetTransactionsRequest) (*payment.TransactionList, error) {
 
 	_, span := n.trace.Start(ctx, "retrieving transactions")

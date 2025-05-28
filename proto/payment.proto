@@ -11,6 +11,22 @@ service PaymentService {
 
   // Get a transaction by its ID
   rpc GetTransactionById(GetByIdRequest) returns (Transaction);
+  
+  // Create transaction
+  rpc CreateTransaction(CreateTransactionRequest) returns (CreateTransactionResponse);
+}
+
+message CreateTransactionResponse {
+  Transaction data = 1;
+  string paymentUrl = 2;
+}
+// create transaction request
+message CreateTransactionRequest {
+  int64 entityId = 2;
+  string entityPaymentType = 4;
+  string provider = 5;
+  map<string, string> metaData = 6;
+  int64 amount = 7;
 }
 
 // Request message combining pagination and filters
@@ -33,7 +49,6 @@ message TransactionFilter {
   string provider = 4;
 }
 
-// Single transaction data
 message Transaction {
   int64 id = 1;
   int64 entityId = 2;

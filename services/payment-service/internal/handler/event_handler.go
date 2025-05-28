@@ -36,8 +36,8 @@ type EventHandler struct {
 }
 
 func InitEventHandler(store repository.PaymentRepo) *EventHandler {
-	providers.RegisterProvider(model.PaystackPaymentProvider, providers.NewPaystackGateway(env.GetString("PAYSTACK_API_KEY", ""), store))
-	providers.RegisterProvider(model.FlutterPaymentProvider, providers.NewFlutterkGateway(env.GetString("FLUTTER_API_KEY", ""), store))
+	providers.RegisterProvider(model.PaymentProviderPaystack, providers.NewPaystackGateway(env.GetString("PAYSTACK_API_KEY", ""), store))
+	providers.RegisterProvider(model.PaymentProviderFlutter, providers.NewFlutterkGateway(env.GetString("FLUTTER_API_KEY", ""), store))
 	return &EventHandler{
 		paymentRegistry: providers.ProviderRegistry,
 	}
@@ -90,10 +90,10 @@ func (p *EventHandler) payForOrder(msg []byte) error {
 		return err
 	}
 	ctx := context.Background()
-	p.paymentRegistry[model.PaystackPaymentProvider].InitiateTransaction(ctx, providers.PaymentRequest{
+	p.paymentRegistry[model.PaymentProviderPaystack].InitiateTransaction(ctx, providers.PaymentRequest{
 		Amount:     payload.Amount,
 		EntityID:   strconv.Itoa(payload.OrderId),
-		EntityType: model.VendorSubscriptionPayment,
+		EntityType: model.EntityPaymentTypeVendorSubscriptionPayment,
 		MetaData:   map[string]string{"vendorId": strconv.Itoa(payload.VendorId), "userId": strconv.Itoa(payload.UserId), "orderId": strconv.Itoa(payload.OrderId)},
 	})
 	return nil
@@ -106,10 +106,10 @@ func (p *EventHandler) payForVendorSubscription(msg []byte) error {
 		return err
 	}
 	ctx := context.Background()
-	p.paymentRegistry[model.PaystackPaymentProvider].InitiateTransaction(ctx, providers.PaymentRequest{
+	p.paymentRegistry[model.PaymentProviderPaystack].InitiateTransaction(ctx, providers.PaymentRequest{
 		Amount:     payload.Amount,
 		EntityID:   strconv.Itoa(payload.SubscriptionId),
-		EntityType: model.VendorSubscriptionPayment,
+		EntityType: model.EntityPaymentTypeVendorSubscriptionPayment,
 		MetaData:   map[string]string{"vendorId": strconv.Itoa(payload.VendorId), "userId": strconv.Itoa(payload.UserId), "subscriptionId": strconv.Itoa(payload.SubscriptionId)},
 	})
 	return nil

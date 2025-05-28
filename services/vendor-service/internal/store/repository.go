@@ -19,7 +19,7 @@ type StoreRepo interface {
 	// Update inventory
 	UpdateInventory(id int64, payload Inventory) error
 	// delete inventory
-	DeleteInventory(id int64) (*Inventory, error)
+	DeleteInventory(id int64) (*int64, error)
 	// Get Inventories
 	GetInventories(pagination *utils.PaginationPayload, filter *types.InventoryFilter) (result []Inventory, total int, err error)
 }

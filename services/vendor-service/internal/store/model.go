@@ -8,6 +8,7 @@ import (
 )
 
 type Inventory struct {
+	Id                   int                  `json:"id" `
 	Quantity             int                  `json:"quantity" validate:"required"`
 	UnitCostPrice        *int                 `json:"unitCostPrice" validate:"-"` //not required but if put in will help with sales report
 	ProductId            int                  `json:"productId" validate:"required"`

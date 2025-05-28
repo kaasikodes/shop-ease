@@ -11,15 +11,3 @@ type PaymentRepo interface {
 	UpdateTransaction(id int, payload model.Transaction) (data *model.Transaction, err error)
 	GetTransactionById(id int) (data *model.Transaction, err error)
 }
-
-type SqlPaymentRepo struct {
-}
-
-func NewSqlPaymentRepo() *SqlPaymentRepo {
-	return &SqlPaymentRepo{}
-
-}
-func (p *SqlPaymentRepo) GetTransactions(pagination *types.PaginationPayload, filter *model.TransactionFilter) (result []model.Transaction, total int, err error)
-func (p *SqlPaymentRepo) CreateTransaction(model.Transaction) (data *model.Transaction, err error)
-func (p *SqlPaymentRepo) UpdateTransaction(id int, payload model.Transaction) (data *model.Transaction, err error)
-func (p *SqlPaymentRepo) GetTransactionById(id int) (data *model.Transaction, err error)

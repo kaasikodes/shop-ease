@@ -78,9 +78,9 @@ func determinePaymentProvider(r *http.Request) (model.PaymentProvider, error) {
 	r.Body = io.NopCloser(bytes.NewReader(body)) // Reset
 
 	if bytes.Contains(body, []byte(`"event":"charge.success"`)) {
-		return model.PaystackPaymentProvider, nil
+		return model.PaymentProviderPaystack, nil
 	} else if bytes.Contains(body, []byte(`"data":"flutter_event"`)) {
-		return model.FlutterPaymentProvider, nil
+		return model.PaymentProviderFlutter, nil
 	}
 
 	return "", fmt.Errorf("could not determine payment provider")

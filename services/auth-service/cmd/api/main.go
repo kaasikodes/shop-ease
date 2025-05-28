@@ -14,6 +14,7 @@ import (
 	"github.com/kaasikodes/shop-ease/shared/logger"
 	"github.com/kaasikodes/shop-ease/shared/observability"
 	"github.com/kaasikodes/shop-ease/shared/proto/notification"
+	"github.com/kaasikodes/shop-ease/shared/proto/vendor_service"
 	"github.com/prometheus/client_golang/prometheus"
 	"go.opentelemetry.io/otel"
 )
@@ -72,6 +73,11 @@ func main() {
 	provider.OauthProviderRegistry[provider.OauthProviderTypeGithub] = githubOauthProvider
 	// set up jwt
 	jwt := jwttoken.NewJwtMaker(env.GetString("JWT_SECRET", ""))
+
+	// grpc clients
+	vendorConn := NewGRPCClient(env.GetString("VENDOR_GRPC_SERVER_ADDR", ":4050"), logger)
+	defer vendorConn.Close()
+	vendorClient := vendor_service.NewVendorServiceClient(vendorConn)
 	var app = &application{
 		config:                cfg,
 		rateLimiter:           rateLimiterConfig{},
@@ -83,6 +89,9 @@ func main() {
 		broker:                broker,
 		oauthProviderRegistry: provider.OauthProviderRegistry,
 		jwt:                   jwt,
+		clients: Clients{
+			vendor: vendorClient,
+		},
 	}
 	mux := app.mount(metricsReg)
 

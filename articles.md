@@ -177,3 +177,65 @@ The diagram below showcase the proposed architecture of our auth service
 ### Creating and exposing our own oauth provider to be consumed by other
 
 Conclusion
+
+# Auth Service
+
+Hello, let's discuss the auth service as we established previously the auth service will be used to authenticate request and now some. We'll be making use of stateless authentication in our auth service and before we proceed any further let's discuss the diagram below. The diagram illustrate the internal workings/architecture of our auth service, it also establishes the relationship between the auth service and other services. As you can see once the user is authenticated via the auth service an access token is returned to the user this access token is a jwt roken signed by a secret, now for subsequent calls to be made to other services this access token has to be valid, and then decoded to get the information contained within it which in our case will be the user id and email fo the user. Now because in our microservice architecture we favor service independence we'll have to come up with an effective stategy to ensure that the guard/middleware that our services use to verify this token does not lead to a single point of failure. Lets explore some option before picking the stategy that is write for us.
+
+- Option 1: The api gateway that sends requests to the appropriate service performs a check/ middleware before forwading the request to the service concerned in that check it decodes the information and attaches it to the request header say as x-user-id, or something of a sorts. Now the issue with this is there will be a call every single time to the auth service to verify the token, which introduces additional latency, and in the event that the auth service goes down our entire application is inaccessible. This is unacceptable and defeats the whole purpose of a micro-service architecture
+- Option 2: Not very different from option 1, but each service is reponsible for creating a middleware that perform the check, still introdues latency and the info from token can be passed via context but in the event the auth service is down that service is down as well
+- Option 3: Remember when we said that we are using stateless authentication, we can take advantage of this fact by having each service be aware of the secret the auth service used to sign and create the access token, that we can then have each service use this secret to validate and decode the token, this will remove additional latency of having to call the service, but there is a new security problem introduced. If for any reason a service exposes this secret then all our services are subject to attack because of the mistake of one service. Onw way to solve this problem is to implement assymetric encryption of the sectre along side key rotation of the keys periodically to ensure ...
+
+So we'll go with option 3 and we'll create a shared package that is shared by all services and will expose the following methods validateToken, createToken, extractInfoFromToken, and validateAndExtractInfoFromToken. We'll the implement the symmetric version and move on tho the aymmetric with key rotation.
+
+Other aspects of our auth service, we'll have to expose endpoints to register, login as oath get user info, and ensure the system is extensible so it can act as an oauth provider of its own (to be called by other sytems wishing to integrate with our application)
+
+Next up we'll talk on
+
+- Stateless authentication across services
+
+# Statesless authenication across services
+
+Talk about and give examples, scenarios of how a service will handle statetless authentication through the expected access token(delivered by auth service) that will be sent to it
+Now stateless auth across services, now that we've established that each service is reponsible for its auth middleware will need to define how that middleware will work. We'll have to ensure its performant in the sense that there is little to no latency as a result of this middleware, each service has specific expectations of its middleware, let's take for example the order service, the order service lets say will need at least two services, namely:
+
+- authMiddleware
+- isCustomerActiveMiddleware
+
+Auth middleware just to validate that the token been passed in is valid and to do this it just needs the jwt secret to do this, or the public key if you're using the more secure assymetic encrytion with key rotation. Howver this middle ware is reponsible for passing in the userId as a contecxt to subsequent requests so they have access to the userId
+
+Now the isCustomerActiveMiddlware will need to check wether the user has an active customer account before proceeding, and to do this it will need to talk to the auth service to retieve this information although we don't have a single point of failure, we could have one here as well as increased latency how do we solve this problem so the app still works if auth service is down, the answer is a caching if we stored the user info in memory on first call we'll not need to make an additional call on subsequent requests all we have to do is read from memory, which is near immediate. but in order to ensure a system is resilient we will have to have a backup storage so if the order service goes down we could still access the info, we could just call the auth service again and cache in memory but we could have a redis back up so we store in memory and in redis, now if we can't get from memory we get from redis which will give a faster response that calling the auth service. Now we'll also have to invalidate this cache when the access token has expires or is invalid or the user changes information and we can do that as follows if token expires we delete user info from both caches, we have the auth service publish a user upated event and the order service listems and deletes the caches data from both cache stores
+
+Now this example speaks for the order service, but the same conscepts can stlill be implemented on the vendor service, subscription, and other
+
+Next up we'll discuss
+
+- Caching in distrubuted services
+- Inter service communication
+
+# Extending Auth Service to be Oauth compliant
+
+An important of any system being scalable is its abilibity to be extended and replicated. and to follow rules(compliant) The reason why we have such a wonderful system called the worldwide is largely attributed to this attributes, especially compliance. In the world of software enginnering this is enforced by the word "protocal". Imagine a world where there was no common language there will be chaos, the same applies in the world of software engineering if everyone built without adhering to protocols there will be chaos,. A clear and familiar example of this in action is developer can build api endpoints that can be used by other systems, now you may overlook this but there is a reason they can be used without hassle and this is because this api endpoints adhere to a protop http that expectations of verbs like post, get, ... and headers to be in the request. Nowadays this is heavily abstracted by developers but this is important for any http api endpoint to work. Today. we're going to extend our system so it can become an oauth provider for other sytems to integrate with, like google, faebook and other common oauth providers. In order to move forward we have to understand what make an api ouath compliant and then create an implementation that adheres to those rules, you can view protocols as interface in your favorite programming language, where you can have as many implementations of your interface implementation. Here are things expected from an oauth compliant service:
+
+- Login
+- Token Exchange
+- Callback
+- Please complete correct this
+
+Now lets show code snippets in our favorite programming language(go) of how this can be implemented
+
+# Caching in Distibuted Systems
+
+Let's disuss caching in distributed systems, as with anything storage in web development there is always a bit of nuance to it. There are different considerations that should be made in order to adopt any of the approaches we'll be discussing. Some of the approaches include
+
+- A shared caching betweeen all services
+- Each service should have its own cache(my favorite, I belive services should be as independent as possible)
+- And a hybrid approach
+
+# Notification Service
+
+Let's discuss building our notification service, in most applications this is the most independent and uncoupled service, that is for good reason the notification service is the service that benefits mosts from asynchronous communication due to its very nature. Most service simply will broadcast messages to the notification srvice to send the concerned entities. The diagram below illustrates what a typical interaction of the notification service looks like with other services. Typically the messages sent to the notification service will contain the followin information - email, phone_number, methods(sms,in-app,email), smsMessage(text), inAppMessage(html), emailMessage(email compatible html).
+Discuss the methods
+Show go implementation of each method discussed, also in app should use web sockets
+Show example code in go of a service publishing message to the notification service
+And example code in go of notification service handling the message
